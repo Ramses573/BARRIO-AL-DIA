@@ -1,0 +1,11 @@
+/* Home page styles */
+.home {
+  padding: 2rem;
+  text-align: center;
+}
+.home h2 {
+  margin-bottom: 1rem;
+}
+.home p {
+  margin: 0.5rem 0;
+}

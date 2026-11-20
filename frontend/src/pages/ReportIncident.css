@@ -1,0 +1,41 @@
+/* Report Incident page styles */
+.report-incident {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+}
+.report-incident h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.report-incident label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+.report-incident input,
+.report-incident select,
+.report-incident textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.report-incident button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.report-incident button:hover {
+  background: #1a252f;
+}
