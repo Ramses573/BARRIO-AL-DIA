@@ -117,9 +117,14 @@ export default function Navbar() {
               />
             </>
           ) : (
-            <div className="navbar-locked-pill">
-              <Lock size={13} className="text-amber" />
-              <span>Acceso Protegido</span>
+            <div className="navbar-public-actions">
+              <Link to="/report" className="btn-navbar-citizen-report">
+                <PlusCircle size={14} className="nav-icon" /> Reporte Comunitario
+              </Link>
+              <Link to="/login" className="navbar-locked-pill" title="Ingreso exclusivo para funcionarios municipales">
+                <Lock size={13} className="text-amber" />
+                <span>Portal Municipal</span>
+              </Link>
             </div>
           )}
 

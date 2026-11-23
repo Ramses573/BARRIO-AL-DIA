@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import {
   Building2,
   Lock,
@@ -11,7 +11,8 @@ import {
   Sparkles,
   UserPlus,
   Mail,
-  Briefcase
+  Briefcase,
+  PlusCircle
 } from 'lucide-react'
 import { login, register, isAuthenticated, DEFAULT_OFFICIALS } from '../services/authService'
 import { useToast } from '../components/Toast'
@@ -325,6 +326,20 @@ export default function Login() {
             </button>
           </form>
         )}
+
+        {/* Acceso Comunitario Público para Ciudadanos */}
+        <div className="login-citizen-card">
+          <div className="citizen-card-content">
+            <span className="citizen-badge">CANAL CIUDADANO ABIERTO</span>
+            <strong>¿Sos vecino de la comunidad?</strong>
+            <p>
+              Reportá huecos en la calle, postes sin luz, fugas de agua o emergencias de inmediato sin crear una cuenta.
+            </p>
+          </div>
+          <Link to="/report" className="btn-citizen-direct-report">
+            <PlusCircle size={15} /> Reportar Incidente Comunitario
+          </Link>
+        </div>
 
         {/* Pie informativo */}
         <div className="login-footer">

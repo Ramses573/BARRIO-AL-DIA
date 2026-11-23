@@ -67,6 +67,15 @@ export const getIncidentById = (id) => {
   return getIncidents().find(item => item.id === Number(id))
 }
 
+export const getIncidentByTicketCode = (code) => {
+  if (!code) return null
+  const cleaned = code.trim().toUpperCase()
+  return getIncidents().find(item =>
+    (item.ticketCode && item.ticketCode.toUpperCase() === cleaned) ||
+    String(item.id) === cleaned
+  )
+}
+
 /**
  * Consulta asincrónica directa a la API de .NET 9 (con sincronización a caché)
  */
@@ -112,8 +121,15 @@ export const addIncident = (newIncident) => {
   const defaultLat = 9.8644 + (Math.random() - 0.5) * 0.02
   const defaultLng = -83.9194 + (Math.random() - 0.5) * 0.02
 
+  const loc = (newIncident.location || '').toLowerCase()
+  const cantonPrefix = loc.includes('turrialba') ? 'TURR' :
+                       (loc.includes('tarrazu') || loc.includes('tarrazú')) ? 'TARZ' : 'CART'
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+  const ticketCode = newIncident.ticketCode || `TKT-${cantonPrefix}-${randomSuffix}`
+
   const item = {
     id: current.length ? Math.max(...current.map(i => i.id)) + 1 : 1,
+    ticketCode,
     date: newIncident.date || new Date().toISOString().split('T')[0],
     lat: newIncident.lat ? Number(newIncident.lat) : defaultLat,
     lng: newIncident.lng ? Number(newIncident.lng) : defaultLng,

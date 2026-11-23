@@ -19,9 +19,12 @@ import {
   RotateCcw,
   Trash2,
   Clock,
-  Sparkles
+  Sparkles,
+  Copy,
+  Check
 } from 'lucide-react'
 import { addIncident } from '../services/incidentService'
+import { isAuthenticated } from '../services/authService'
 import { useToast } from '../components/Toast'
 import './ReportIncident.css'
 
@@ -58,6 +61,8 @@ export default function ReportIncident() {
   const [isLocating, setIsLocating] = useState(false)
   const [success, setSuccess] = useState(false)
   const [hasDraftNotice, setHasDraftNotice] = useState(false)
+  const [createdTicket, setCreatedTicket] = useState(null)
+  const [copiedTicket, setCopiedTicket] = useState(false)
 
   const categoriesList = [
     { name: 'Inundación', IconComponent: Waves, color: '#3182ce' },
@@ -276,7 +281,7 @@ export default function ReportIncident() {
 
     const primaryPhoto = form.photos[0] || null
 
-    addIncident({
+    const created = addIncident({
       title: `${form.category} reportado en ${form.location.split(',')[0]}`,
       category: form.category,
       location: form.location,
@@ -301,12 +306,9 @@ export default function ReportIncident() {
       // Fallback
     }
 
+    setCreatedTicket(created)
     setSuccess(true)
-    addToast('¡Reporte registrado exitosamente! Ya es visible en el mapa y en la consola municipal.', 'success')
-
-    setTimeout(() => {
-      navigate('/incidents')
-    }, 1800)
+    addToast('¡Reporte registrado exitosamente! Se generó tu código de seguimiento.', 'success')
   }
 
   return (
@@ -343,14 +345,97 @@ export default function ReportIncident() {
           </div>
         )}
 
-        {success ? (
+        {success && createdTicket ? (
           <div className="report-success-screen">
             <div className="success-icon-badge">
-              <CheckCircle2 size={48} className="text-green" />
+              <CheckCircle2 size={54} className="text-green" />
             </div>
             <h3>¡Reporte Notificado con Éxito!</h3>
-            <p>Tu reporte ha sido georreferenciado e ingresado en la lista de incidentes activos para atención institucional.</p>
-            <span className="redirecting-hint">Redirigiendo a la lista de incidentes...</span>
+            <p className="success-sub">Tu reporte fue registrado en el sistema cantonal y notificado a la cuadrilla correspondiente.</p>
+
+            <div className="citizen-ticket-box">
+              <span className="ticket-box-label">CÓDIGO ÚNICO DE SEGUIMIENTO (TICKET):</span>
+              <div className="ticket-box-code-row">
+                <span className="ticket-box-code">{createdTicket.ticketCode || `TKT-CART-${createdTicket.id}`}</span>
+                <button
+                  type="button"
+                  className="btn-copy-ticket"
+                  onClick={() => {
+                    const code = createdTicket.ticketCode || `TKT-CART-${createdTicket.id}`
+                    navigator.clipboard.writeText(code)
+                    setCopiedTicket(true)
+                    addToast('Código copiado al portapapeles', 'info')
+                    setTimeout(() => setCopiedTicket(false), 2000)
+                  }}
+                  title="Copiar código de seguimiento"
+                >
+                  {copiedTicket ? <Check size={16} className="text-green" /> : <Copy size={16} />}
+                  <span>{copiedTicket ? '¡Copiado!' : 'Copiar'}</span>
+                </button>
+              </div>
+              <p className="ticket-box-hint">
+                Guardá este código para consultar el avance, estado de cuadrilla y fotografías de resolución municipal.
+              </p>
+            </div>
+
+            <div className="report-success-summary">
+              <div className="summary-item">
+                <span className="sum-label">Categoría:</span>
+                <span className="sum-val">{createdTicket.category}</span>
+              </div>
+              <div className="summary-item">
+                <span className="sum-label">Ubicación:</span>
+                <span className="sum-val">{createdTicket.location}</span>
+              </div>
+              <div className="summary-item">
+                <span className="sum-label">Prioridad:</span>
+                <span className="sum-val">{createdTicket.priority}</span>
+              </div>
+            </div>
+
+            <div className="success-actions-buttons">
+              <button
+                type="button"
+                className="btn-success-new"
+                onClick={() => {
+                  setSuccess(false)
+                  setCreatedTicket(null)
+                  setForm({
+                    category: 'Inundación',
+                    dateTime: new Date().toLocaleDateString('es-CR') + ' - ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    location: initialLocation,
+                    lat: null,
+                    lng: null,
+                    gpsAccuracy: null,
+                    urgency: 'Media',
+                    description: '',
+                    photos: [],
+                    isAnonymous: false,
+                    confirmed: false
+                  })
+                }}
+              >
+                Reportar otro incidente
+              </button>
+
+              {isAuthenticated() ? (
+                <button
+                  type="button"
+                  className="btn-success-view-list"
+                  onClick={() => navigate('/incidents')}
+                >
+                  Ver en Lista de Incidentes
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-success-view-list"
+                  onClick={() => navigate('/login')}
+                >
+                  Ir al Portal Principal
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="report-two-columns">
