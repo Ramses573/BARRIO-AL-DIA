@@ -183,11 +183,28 @@ coverage/
 *.coverage
 *.coveragerc
 test-results/
-*.xml
-*.html
-*.json
+test-reports/
 *.junit.xml
 *.pytest_cache/
 *.pytest_cache/*
 *.nox/
 .nox/
+.nyc_output/
+playwright-report/
+cypress/videos/
+cypress/screenshots/
+*.test.log
+*.spec.log
+
+# -------------------------------------------------
+# 8️⃣  AI Assistants, LLM IDEs & Agent Workspaces
+# -------------------------------------------------
+.agents/
+.gemini/
+.antigravity/
+.claude/
+.cursor/
+.windsurf/
+.copilot/
+.chat/
+*.ai/

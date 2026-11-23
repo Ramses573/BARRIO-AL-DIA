@@ -1,0 +1,12 @@
+{
+  "name": "barrio-al-dia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma comunitaria de reporte y consulta de incidentes en tiempo real",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm run test --prefix frontend",
+    "lint": "npm run lint --prefix frontend"
+  }
+}
