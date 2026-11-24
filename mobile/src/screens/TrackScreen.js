@@ -173,7 +173,9 @@ export default function TrackScreen({ route, navigation }) {
                         {code}
                       </Text>
                       <Text style={styles.pickerItemTitle} numberOfLines={1}>{t.title}</Text>
-                      <Text style={styles.pickerItemMeta}>{t.category} • {t.status}</Text>
+                      <Text style={styles.pickerItemMeta}>
+                        {t.category} • {t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')} • {t.status}
+                      </Text>
                     </View>
                     {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
                   </TouchableOpacity>
@@ -206,6 +208,20 @@ export default function TrackScreen({ route, navigation }) {
           </View>
 
           <Text style={styles.resultTitle}>{incident.title}</Text>
+
+          {/* Vecino que reportó la incidencia */}
+          <View style={styles.reporterBadgeRow}>
+            <Ionicons
+              name={incident.isAnonymous ? "shield-checkmark" : "person"}
+              size={14}
+              color={incident.isAnonymous ? "#64748b" : colors.primary}
+            />
+            <Text style={styles.reporterLabel}>Reportado por: </Text>
+            <Text style={[styles.reporterValue, !incident.isAnonymous && { color: colors.primary }]}>
+              {incident.isAnonymous ? 'Anónimo Protegido' : (incident.reporterName || 'Ramsés Solano Calvo')}
+            </Text>
+          </View>
+
           <View style={styles.locRow}>
             <Ionicons name="location" size={14} color={colors.primary} />
             <Text style={styles.locText}>{incident.location}</Text>
@@ -513,7 +529,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.textMain,
-    marginBottom: 6,
+    marginBottom: 4,
+  },
+  reporterBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  reporterLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  reporterValue: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#1e293b',
   },
   locRow: {
     flexDirection: 'row',

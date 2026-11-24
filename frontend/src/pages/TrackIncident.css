@@ -597,6 +597,27 @@
   text-decoration: underline;
 }
 
+.reporter-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(2, 132, 199, 0.08);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  color: var(--primary-color, #0284c7);
+  font-weight: 600;
+}
+
+.detail-box-reporter {
+  background: rgba(2, 132, 199, 0.04);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.text-reporter-primary {
+  color: var(--primary-color, #0284c7) !important;
+  font-weight: 800 !important;
+}
+
 @media (max-width: 768px) {
   .track-search-box {
     flex-direction: column;

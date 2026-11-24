@@ -303,6 +303,9 @@ export default function Map() {
           <strong style="color: ${color}; font-size: 13px;">${inc.category}</strong>
           <h4 style="margin: 4px 0 6px; font-size: 14px; color: #1e293b;">${inc.title}</h4>
           <p style="margin: 0 0 4px; font-size: 12px; color: #64748b;">📍 ${inc.location}</p>
+          <p style="margin: 0 0 4px; font-size: 11.5px; color: #0284c7; font-weight: 700;">
+            👤 Reportado por: ${inc.isAnonymous ? 'Anónimo Protegido' : (inc.reporterName || 'Ramsés Solano Calvo')}
+          </p>
           <p style="margin: 0; font-size: 12px; color: #334155;">${inc.description}</p>
         </div>
       `)
@@ -665,6 +668,7 @@ export default function Map() {
                 </div>
                 <h4>{selectedIncident.title}</h4>
                 <p><strong>Ubicación:</strong> {selectedIncident.location}</p>
+                <p><strong>Reportado por:</strong> <span style={{ color: '#0284c7', fontWeight: '800' }}>{selectedIncident.isAnonymous ? '🛡️ Anónimo Protegido' : (selectedIncident.reporterName || 'Ramsés Solano Calvo')}</span></p>
                 <p><strong>Coordenadas:</strong> {selectedIncident.lat.toFixed(4)}, {selectedIncident.lng.toFixed(4)}</p>
                 <p><strong>Fecha:</strong> {selectedIncident.date}</p>
                 <p><strong>Estado:</strong> <span className="status-highlight">{selectedIncident.status}</span></p>

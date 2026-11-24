@@ -21,6 +21,7 @@ export const INITIAL_INCIDENTS = [
     photos: [],
     video: null,
     isAnonymous: false,
+    reporterName: 'Ramsés Solano Calvo',
     timeline: [
       { stage: 'Recibido', date: '2026-11-20 08:30', note: 'Notificación ingresada al sistema de despacho cantonal' },
       { stage: 'En Evaluación', date: '2026-11-20 09:15', note: 'Asignado a la Unidad Técnica de Drenajes de Cartago' },
@@ -44,6 +45,7 @@ export const INITIAL_INCIDENTS = [
     photos: [],
     video: null,
     isAnonymous: false,
+    reporterName: 'María Gómez Jiménez',
     timeline: [
       { stage: 'Recibido', date: '2026-11-21 14:10', note: 'Reporte registrado y validado por vecino' }
     ]
@@ -65,6 +67,7 @@ export const INITIAL_INCIDENTS = [
     photos: [],
     video: null,
     isAnonymous: true,
+    reporterName: null,
     timeline: [
       { stage: 'Recibido', date: '2026-11-22 07:00', note: 'Ingreso del reporte anónimo' },
       { stage: 'En Evaluación', date: '2026-11-22 08:30', note: 'Inspección técnica realizada por ICE / CoopeSantos' },
@@ -164,6 +167,7 @@ export const addIncident = async (newIncident) => {
     status: 'Pendiente',
     priority: newIncident.urgency || 'Media',
     urgency: newIncident.urgency || 'Media',
+    reporterName: newIncident.isAnonymous ? null : (newIncident.reporterName || 'Ramsés Solano Calvo'),
     timeline: [
       {
         stage: 'Recibido',
@@ -188,7 +192,10 @@ export const addIncident = async (newIncident) => {
       description: createdItem.description,
       priority: createdItem.priority,
       isAnonymous: createdItem.isAnonymous,
-      gpsAccuracy: createdItem.gpsAccuracy
+      gpsAccuracy: createdItem.gpsAccuracy,
+      reporterName: createdItem.isAnonymous ? null : createdItem.reporterName,
+      ticketCode: createdItem.ticketCode,
+      video: createdItem.video ? (typeof createdItem.video === 'string' ? createdItem.video : (createdItem.video.uri || createdItem.video.name)) : null
     })
   } catch {
     // Se sincronizará en la próxima reconexión

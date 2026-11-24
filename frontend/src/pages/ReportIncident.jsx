@@ -357,6 +357,7 @@ export default function ReportIncident() {
       urgency: form.urgency,
       gpsAccuracy: form.gpsAccuracy,
       isAnonymous: form.isAnonymous,
+      reporterName: form.isAnonymous ? null : (form.reporterName || 'Ramsés Solano Calvo'),
       status: 'Pendiente',
       priority: form.urgency
     })

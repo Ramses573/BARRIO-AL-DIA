@@ -80,6 +80,7 @@ export const CANTON_SEED_TICKETS = [
     photo: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80',
     photos: ['https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80'],
     isAnonymous: false,
+    reporterName: 'Ramsés Solano Calvo (Vecino Comunitario)',
     institutionalNote: 'Cuadrilla municipal #3 de Cartago con cisterna y equipo succionador en el sitio.'
   },
   {
@@ -98,6 +99,7 @@ export const CANTON_SEED_TICKETS = [
     photo: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
     photos: ['https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80'],
     isAnonymous: false,
+    reporterName: 'María Gómez Jiménez (Vecina Comunitaria)',
     institutionalNote: 'Inspección preliminar de ingeniería vial programada.'
   },
   {
@@ -116,6 +118,7 @@ export const CANTON_SEED_TICKETS = [
     photo: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80',
     photos: ['https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80'],
     isAnonymous: true,
+    reporterName: null,
     institutionalNote: 'Obras concluidas por brigada conjunta municipal y cooperativa eléctrica.'
   }
 ]
@@ -207,6 +210,7 @@ export const addIncident = (newIncident) => {
     lng: newIncident.lng ? Number(newIncident.lng) : defaultLng,
     status: newIncident.status || 'Pendiente',
     priority: newIncident.priority || 'Media',
+    reporterName: newIncident.isAnonymous ? null : (newIncident.reporterName || 'Ramsés Solano Calvo'),
     ...newIncident
   }
   const updated = [item, ...current]
@@ -227,6 +231,9 @@ export const addIncident = (newIncident) => {
         priority: item.priority,
         isAnonymous: item.isAnonymous,
         gpsAccuracy: item.gpsAccuracy,
+        reporterName: item.isAnonymous ? null : item.reporterName,
+        ticketCode: item.ticketCode,
+        video: item.video ? (typeof item.video === 'string' ? item.video : (item.video.preview || item.video.name)) : null,
         photo: item.photo,
         photos: item.photos
       })

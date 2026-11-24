@@ -49,6 +49,15 @@ public class Incident
     [MaxLength(300)]
     public string? Photo { get; set; }
 
+    [MaxLength(50)]
+    public string? TicketCode { get; set; }
+
+    [MaxLength(150)]
+    public string? ReporterName { get; set; }
+
+    [MaxLength(500)]
+    public string? Video { get; set; }
+
     public int Votes { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

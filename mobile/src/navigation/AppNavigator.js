@@ -8,6 +8,7 @@ import MapScreen from '../screens/MapScreen'
 import ReportScreen from '../screens/ReportScreen'
 import TrackScreen from '../screens/TrackScreen'
 import ChatScreen from '../screens/ChatScreen'
+import ProfileScreen from '../screens/ProfileScreen'
 
 const Tab = createBottomTabNavigator()
 
@@ -52,6 +53,8 @@ export default function AppNavigator() {
             iconName = focused ? 'search' : 'search-outline'
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline'
+          } else if (route.name === 'Perfil') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline'
           }
           return <Ionicons name={iconName} size={22} color={color} />
         },
@@ -95,6 +98,14 @@ export default function AppNavigator() {
         options={{
           title: 'Asistencia y Chat',
           tabBarLabel: 'Asistencia'
+        }}
+      />
+      <Tab.Screen
+        name="Perfil"
+        component={ProfileScreen}
+        options={{
+          title: 'Perfil Comunitario',
+          tabBarLabel: 'Perfil'
         }}
       />
     </Tab.Navigator>

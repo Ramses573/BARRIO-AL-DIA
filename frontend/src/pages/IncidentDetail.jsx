@@ -283,7 +283,11 @@ export default function IncidentDetail() {
                   <Calendar size={15} className="meta-icon" /> <span>{incident.date}</span>
                 </span>
                 <span className="meta-item">
-                  <Hash size={15} className="meta-icon" /> <span>#{incident.id}</span>
+                  <Hash size={15} className="meta-icon" /> <span>{incident.ticketCode || `#${incident.id}`}</span>
+                </span>
+                <span className="meta-item meta-reporter-item">
+                  <User size={15} className="meta-icon text-blue" />
+                  <span>Reportado por: <strong>{incident.isAnonymous ? 'Anónimo Protegido' : (incident.reporterName || 'Ramsés Solano Calvo')}</strong></span>
                 </span>
               </div>
             </header>

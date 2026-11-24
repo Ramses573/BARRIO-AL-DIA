@@ -16,7 +16,8 @@ import {
   Share2,
   HelpCircle,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react'
 import { getAllTrackableTickets, getIncidentByTicketCode } from '../services/incidentService'
 import { useToast } from '../components/Toast'
@@ -106,9 +107,10 @@ export default function TrackIncident() {
                 <option value="">-- Elige un ticket para consultar su seguimiento --</option>
                 {allTickets.map(t => {
                   const code = t.ticketCode || `#${t.id}`
+                  const reporter = t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')
                   return (
                     <option key={code} value={code}>
-                      {code} — {t.title} ({t.category} • {t.status})
+                      {code} — {t.title} [{reporter}] ({t.status})
                     </option>
                   )
                 })}
@@ -154,6 +156,10 @@ export default function TrackIncident() {
                   </span>
                   <span>
                     <Calendar size={14} className="inline-icon text-blue" /> Reportado el {ticketData.date}
+                  </span>
+                  <span className="reporter-meta-tag">
+                    <User size={14} className="inline-icon text-blue" />
+                    <span>Reportado por: <strong>{ticketData.isAnonymous ? 'Anónimo Protegido' : (ticketData.reporterName || 'Ramsés Solano Calvo')}</strong></span>
                   </span>
                 </div>
               </div>
@@ -243,6 +249,12 @@ export default function TrackIncident() {
 
             {/* Detalles Técnicos y Fotografía */}
             <div className="ticket-details-grid">
+              <div className="detail-box detail-box-reporter">
+                <span className="detail-label">Vecino Reportante</span>
+                <strong className="detail-value text-reporter-primary">
+                  {ticketData.isAnonymous ? '🛡️ Anónimo Protegido' : (ticketData.reporterName || 'Ramsés Solano Calvo')}
+                </strong>
+              </div>
               <div className="detail-box">
                 <span className="detail-label">Categoría</span>
                 <strong className="detail-value">{ticketData.category}</strong>
@@ -250,10 +262,6 @@ export default function TrackIncident() {
               <div className="detail-box">
                 <span className="detail-label">Nivel de Prioridad</span>
                 <strong className="detail-value">{ticketData.priority || 'Media'}</strong>
-              </div>
-              <div className="detail-box">
-                <span className="detail-label">Modalidad de Reporte</span>
-                <strong className="detail-value">{ticketData.isAnonymous ? 'Anónimo Protegido' : 'Vecino Comunitario'}</strong>
               </div>
               <div className="detail-box">
                 <span className="detail-label">Cantón Encargado</span>

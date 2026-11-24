@@ -108,6 +108,9 @@ public class IncidentsController : ControllerBase
             i.Priority,
             i.Status,
             i.IsAnonymous,
+            i.ReporterName,
+            i.TicketCode,
+            i.Video,
             i.GpsAccuracy,
             i.InstitutionalNote,
             i.Photo,
@@ -149,6 +152,9 @@ public class IncidentsController : ControllerBase
             incident.Priority,
             incident.Status,
             incident.IsAnonymous,
+            incident.ReporterName,
+            incident.TicketCode,
+            incident.Video,
             incident.GpsAccuracy,
             incident.InstitutionalNote,
             incident.Photo,
@@ -165,6 +171,50 @@ public class IncidentsController : ControllerBase
                 c.Date,
                 c.CreatedAt
             })
+        };
+
+        return Ok(result);
+    }
+
+    // GET: api/incidents/ticket/{ticketCode}
+    [HttpGet("ticket/{ticketCode}")]
+    public async Task<IActionResult> GetIncidentByTicket(string ticketCode)
+    {
+        var cleaned = ticketCode.Trim().ToUpper();
+        var incident = await _context.Incidents
+            .Include(i => i.Photos)
+            .Include(i => i.Comments.OrderBy(c => c.CreatedAt))
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => (i.TicketCode != null && i.TicketCode.ToUpper() == cleaned) || i.Id.ToString() == cleaned);
+
+        if (incident == null)
+        {
+            return NotFound(new { message = $"Ticket {ticketCode} no localizado en la base de datos municipal." });
+        }
+
+        var result = new
+        {
+            incident.Id,
+            incident.Title,
+            incident.Category,
+            incident.Location,
+            incident.Lat,
+            incident.Lng,
+            incident.Date,
+            incident.Description,
+            incident.Priority,
+            incident.Status,
+            incident.IsAnonymous,
+            incident.ReporterName,
+            incident.TicketCode,
+            incident.Video,
+            incident.GpsAccuracy,
+            incident.InstitutionalNote,
+            incident.Photo,
+            incident.Votes,
+            incident.CreatedAt,
+            Image = incident.Photos.FirstOrDefault()?.PhotoUrl ?? (incident.Photo != null ? $"/uploads/{incident.Photo}" : null),
+            Photos = incident.Photos.Select(p => new { name = p.PhotoName, preview = p.PhotoUrl })
         };
 
         return Ok(result);
@@ -197,6 +247,9 @@ public class IncidentsController : ControllerBase
             IsAnonymous = dto.IsAnonymous,
             GpsAccuracy = dto.GpsAccuracy,
             Photo = dto.Photo,
+            TicketCode = dto.TicketCode ?? $"TKT-CART-{Random.Shared.Next(1000, 9999)}",
+            ReporterName = dto.IsAnonymous ? null : (dto.ReporterName ?? "Ramsés Solano Calvo"),
+            Video = dto.Video,
             Votes = 1,
             CreatedAt = DateTime.UtcNow
         };
@@ -229,6 +282,9 @@ public class IncidentsController : ControllerBase
             incident.Date,
             incident.Status,
             incident.Priority,
+            incident.TicketCode,
+            incident.ReporterName,
+            incident.Video,
             message = "Incidente registrado exitosamente en el servidor municipal."
         });
     }

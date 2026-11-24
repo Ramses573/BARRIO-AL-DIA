@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   StyleSheet,
   Text,
@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { colors, shadows } from '../theme/colors'
 import { addIncident } from '../services/incidentService'
 import { getWebMapUrl } from '../config'
+import { getCurrentUser, getRegisteredCitizens, login, DEFAULT_CITIZENS } from '../services/authService'
 
 const CATEGORIES = [
   { name: 'Inundación', icon: 'water', color: colors.water },
@@ -51,6 +52,33 @@ export default function ReportScreen({ navigation }) {
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [createdTicket, setCreatedTicket] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [citizens, setCitizens] = useState([])
+  const [showUserModal, setShowUserModal] = useState(false)
+
+  useEffect(() => {
+    loadUser()
+  }, [])
+
+  const loadUser = async () => {
+    const user = await getCurrentUser()
+    const allCitizens = await getRegisteredCitizens()
+    setCitizens(allCitizens)
+    if (user) {
+      setCurrentUser(user)
+    } else {
+      const defaultUser = allCitizens[0] || DEFAULT_CITIZENS[0]
+      setCurrentUser(defaultUser)
+      await login(defaultUser.username, '123')
+    }
+  }
+
+  const handleSelectUser = async (citizen) => {
+    await login(citizen.username, citizen.password || '123')
+    setCurrentUser(citizen)
+    setShowUserModal(false)
+    Alert.alert('Identidad actualizada', `Ahora reportas como ${citizen.fullName} (${citizen.canton})`)
+  }
 
   const handleGetGps = async () => {
     setIsLocating(true)
@@ -173,6 +201,8 @@ export default function ReportScreen({ navigation }) {
       return
     }
 
+    const reporter = isAnonymous ? null : (currentUser?.fullName || 'Ramsés Solano Calvo')
+
     setSubmitting(true)
     try {
       const item = await addIncident({
@@ -188,7 +218,8 @@ export default function ReportScreen({ navigation }) {
         photos: photos.map(p => ({ uri: p.uri })),
         photo: photos[0] ? photos[0].uri : null,
         video: video ? { uri: video.uri, duration: video.duration } : null,
-        isAnonymous
+        isAnonymous,
+        reporterName: reporter
       })
       setCreatedTicket(item)
     } catch {
@@ -211,6 +242,32 @@ export default function ReportScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {/* Tarjeta de Identidad del Vecino Comunitario */}
+      <View style={styles.residentHeaderCard}>
+        <View style={styles.residentAvatarWrap}>
+          <Ionicons name={isAnonymous ? "shield-checkmark" : "person"} size={22} color="#ffffff" />
+        </View>
+        <View style={styles.residentDetails}>
+          <Text style={styles.residentHeaderLabel}>Vecino Reportante:</Text>
+          <Text style={styles.residentHeaderName}>
+            {isAnonymous ? '🛡️ Anónimo Protegido' : (currentUser?.fullName || 'Ramsés Solano Calvo')}
+          </Text>
+          <Text style={styles.residentHeaderSub}>
+            {isAnonymous
+              ? 'Tu nombre no se mostrará en el ticket público'
+              : `${currentUser?.barrio || 'Barrio El Carmen'}, ${currentUser?.canton || 'Cartago'} • Firma pública`}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.btnChangeResident}
+          onPress={() => setShowUserModal(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="swap-horizontal" size={16} color={colors.primary} />
+          <Text style={styles.btnChangeResidentText}>Cambiar</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 1. Categoría */}
       <Text style={styles.sectionTitle}>1. Tipo de Incidencia</Text>
       <View style={styles.categoriesGrid}>
@@ -355,7 +412,67 @@ export default function ReportScreen({ navigation }) {
               <Text style={styles.photoIndexBadge}>#{idx + 1}</Text>
             </View>
           ))}
-        </ScrollView>
+          {/* Modal para Selección / Cambio de Vecino Comunitario */}
+      <Modal
+        visible={showUserModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowUserModal(false)}
+      >
+        <View style={styles.userModalOverlay}>
+          <View style={styles.userModalCard}>
+            <View style={styles.userModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.userModalTitle}>Identidad del Reportante</Text>
+                <Text style={styles.userModalSubtitle}>Selecciona el vecino que firma la notificación pública</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowUserModal(false)} style={styles.btnCloseUserModal}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.userModalList}>
+              {citizens.map(c => {
+                const isSelected = currentUser && (currentUser.id === c.id || currentUser.username === c.username)
+                return (
+                  <TouchableOpacity
+                    key={c.id || c.username}
+                    style={[styles.userModalItem, isSelected && styles.userModalItemSelected]}
+                    onPress={() => handleSelectUser(c)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.userModalAvatar, isSelected && { backgroundColor: colors.primary }]}>
+                      <Ionicons name="person" size={20} color={isSelected ? '#ffffff' : colors.textMuted} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.userModalItemName, isSelected && { color: colors.primary, fontWeight: '800' }]}>
+                        {c.fullName}
+                      </Text>
+                      <Text style={styles.userModalItemSub}>
+                        {c.barrio}, {c.canton} • {c.role}
+                      </Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.btnGoToProfile}
+              onPress={() => {
+                setShowUserModal(false)
+                if (navigation) navigation.navigate('Perfil')
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="person-add" size={16} color={colors.primary} />
+              <Text style={styles.btnGoToProfileText}>Crear o gestionar cuentas vecinales</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
       )}
 
       {/* 5. Video de Evidencia (Opcional) */}
@@ -454,6 +571,9 @@ export default function ReportScreen({ navigation }) {
               <View style={styles.ticketCodeBox}>
                 <Text style={styles.ticketCodeLabel}>CÓDIGO OFICIAL DE SEGUIMIENTO</Text>
                 <Text style={styles.ticketCodeValue}>{createdTicket.ticketCode}</Text>
+                <Text style={styles.ticketReporterPreview}>
+                  Reportado por: {createdTicket.isAnonymous ? 'Anónimo Protegido' : (createdTicket.reporterName || currentUser?.fullName || 'Ramsés Solano Calvo')}
+                </Text>
               </View>
 
               <View style={styles.modalActions}>
@@ -491,6 +611,66 @@ export default function ReportScreen({ navigation }) {
           </View>
         </Modal>
       )}
+      {/* Modal para Selección / Cambio de Vecino Comunitario */}
+      <Modal
+        visible={showUserModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowUserModal(false)}
+      >
+        <View style={styles.userModalOverlay}>
+          <View style={styles.userModalCard}>
+            <View style={styles.userModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.userModalTitle}>Identidad del Reportante</Text>
+                <Text style={styles.userModalSubtitle}>Selecciona el vecino que firma la notificación pública</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowUserModal(false)} style={styles.btnCloseUserModal}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.userModalList}>
+              {citizens.map(c => {
+                const isSelected = currentUser && (currentUser.id === c.id || currentUser.username === c.username)
+                return (
+                  <TouchableOpacity
+                    key={c.id || c.username}
+                    style={[styles.userModalItem, isSelected && styles.userModalItemSelected]}
+                    onPress={() => handleSelectUser(c)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.userModalAvatar, isSelected && { backgroundColor: colors.primary }]}>
+                      <Ionicons name="person" size={20} color={isSelected ? '#ffffff' : colors.textMuted} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.userModalItemName, isSelected && { color: colors.primary, fontWeight: '800' }]}>
+                        {c.fullName}
+                      </Text>
+                      <Text style={styles.userModalItemSub}>
+                        {c.barrio}, {c.canton} • {c.role}
+                      </Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.btnGoToProfile}
+              onPress={() => {
+                setShowUserModal(false)
+                if (navigation) navigation.navigate('Perfil')
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="person-add" size={16} color={colors.primary} />
+              <Text style={styles.btnGoToProfileText}>Crear o gestionar cuentas vecinales</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   )
 }
@@ -844,5 +1024,148 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.textMuted,
+  },
+  ticketReporterPreview: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primaryDark,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  residentHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    ...shadows.sm,
+    gap: 10,
+  },
+  residentAvatarWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  residentDetails: {
+    flex: 1,
+  },
+  residentHeaderLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  residentHeaderName: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  residentHeaderSub: {
+    fontSize: 11,
+    color: colors.primaryDark,
+    marginTop: 2,
+  },
+  btnChangeResident: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary + '14',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  btnChangeResidentText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  userModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  userModalCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+    ...shadows.md,
+  },
+  userModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  userModalTitle: {
+    fontSize: 16.5,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  userModalSubtitle: {
+    fontSize: 11.5,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  btnCloseUserModal: {
+    padding: 6,
+  },
+  userModalList: {
+    maxHeight: 280,
+    marginBottom: 14,
+  },
+  userModalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+    gap: 10,
+    backgroundColor: '#f8fafc',
+  },
+  userModalItemSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '08',
+  },
+  userModalAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userModalItemName: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  userModalItemSub: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  btnGoToProfile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    gap: 6,
+  },
+  btnGoToProfileText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.primary,
   },
 })

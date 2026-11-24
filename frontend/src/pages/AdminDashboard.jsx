@@ -507,8 +507,9 @@ export default function AdminDashboard() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th style={{ width: '80px' }}>ID / Fecha</th>
+              <th style={{ width: '100px' }}>ID / Folio</th>
               <th>Incidente & Categoría</th>
+              <th>Reportado por</th>
               <th>Ubicación</th>
               <th>Prioridad</th>
               <th>Estado Actual</th>
@@ -519,7 +520,7 @@ export default function AdminDashboard() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan="7" className="admin-empty-cell">
+                <td colSpan="8" className="admin-empty-cell">
                   <AlertCircle size={24} style={{ marginBottom: '0.5rem', display: 'block', margin: '0 auto' }} />
                   No hay incidencias que coincidan con los filtros seleccionados.
                 </td>
@@ -528,7 +529,7 @@ export default function AdminDashboard() {
               filtered.map((item) => (
                 <tr key={item.id} className={`row-status-${(item.status || 'pendiente').toLowerCase().replace(/\s+/g, '-')}`}>
                   <td>
-                    <strong className="item-id">#{item.id}</strong>
+                    <strong className="item-id">{item.ticketCode || `#${item.id}`}</strong>
                     <div className="item-date">{item.date}</div>
                   </td>
                   <td>
@@ -537,6 +538,21 @@ export default function AdminDashboard() {
                       <span className="item-category-tag">{item.category}</span>
                     </div>
                     {item.description && <p className="item-desc-snippet">{item.description}</p>}
+                  </td>
+                  <td>
+                    <span className="item-reporter-badge" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.78rem',
+                      fontWeight: '700',
+                      color: item.isAnonymous ? '#64748b' : '#0284c7',
+                      background: item.isAnonymous ? '#f1f5f9' : 'rgba(2,132,199,0.08)',
+                      padding: '3px 8px',
+                      borderRadius: '4px'
+                    }}>
+                      {item.isAnonymous ? '🛡️ Anónimo' : (item.reporterName || 'Ramsés Solano')}
+                    </span>
                   </td>
                   <td>
                     <span className="item-location">

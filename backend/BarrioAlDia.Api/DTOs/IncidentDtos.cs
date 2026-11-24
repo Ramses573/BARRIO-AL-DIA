@@ -31,6 +31,9 @@ public class CreateIncidentDto
     public int? GpsAccuracy { get; set; }
 
     public string? Photo { get; set; }
+    public string? TicketCode { get; set; }
+    public string? ReporterName { get; set; }
+    public string? Video { get; set; }
 
     public List<PhotoItemDto>? Photos { get; set; }
 }
