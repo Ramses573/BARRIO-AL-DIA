@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Map as MapIcon,
   Globe,
@@ -25,6 +25,10 @@ import './Map.css'
 
 export default function Map() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const queryLat = searchParams.get('lat')
+  const queryLng = searchParams.get('lng')
+  const queryTitle = searchParams.get('title')
   const { addToast } = useToast()
   const mapContainerRef = useRef(null)
   const mapOuterBoxRef = useRef(null)
@@ -64,13 +68,14 @@ export default function Map() {
   useEffect(() => {
     if (!mapContainerRef.current) return
 
-    // Coordenadas iniciales: Cartago Centro, Costa Rica
-    const initialLat = 9.8644
-    const initialLng = -83.9194
+    // Coordenadas iniciales: Si vienen en la URL (ej. desde noticias), centrar directamente ahí
+    const initialLat = queryLat ? parseFloat(queryLat) : 9.8644
+    const initialLng = queryLng ? parseFloat(queryLng) : -83.9194
+    const initialZoom = queryLat && queryLng ? 16 : 15
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
-      zoom: 15,
+      zoom: initialZoom,
       scrollWheelZoom: true,
     })
 
@@ -121,6 +126,28 @@ export default function Map() {
       'google-hibrido': googleHybrid,
       'google-satelite': googleSatellite,
       'google-terreno': googleTerrain,
+    }
+
+    // Marcador de enfoque si vino redirigido desde el boletín de noticias
+    if (queryLat && queryLng) {
+      const pinIcon = L.divIcon({
+        className: 'custom-news-focus-pin',
+        html: `
+          <div style="background: #0284c7; width: 34px; height: 34px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 15px rgba(2,132,199,0.7); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
+            📢
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      })
+      const focusMarker = L.marker([parseFloat(queryLat), parseFloat(queryLng)], { icon: pinIcon }).addTo(map)
+      focusMarker.bindPopup(`
+        <div style="font-family: inherit; padding: 4px; min-width: 200px;">
+          <span style="color: #0284c7; font-weight: 800; font-size: 11px; text-transform: uppercase;">Aviso del Boletín Cantonal</span>
+          <h4 style="margin: 3px 0 6px; font-size: 13px; color: #1e293b;">${decodeURIComponent(queryTitle || 'Evento Cantonal')}</h4>
+          <p style="margin: 0; font-size: 11.5px; color: #64748b;">📍 Ubicación en tiempo real del incidente reportado.</p>
+        </div>
+      `).openPopup()
     }
 
     // Grupo de marcadores con Clustering Inteligente

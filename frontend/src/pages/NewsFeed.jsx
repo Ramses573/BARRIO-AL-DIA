@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Newspaper,
   AlertTriangle,
@@ -14,12 +15,15 @@ import {
   Zap,
   Radio,
   PlusCircle,
-  X
+  X,
+  Video,
+  Navigation
 } from 'lucide-react'
 import { fetchNewsFromApi, getNews } from '../services/newsService'
 import './NewsFeed.css'
 
 export default function NewsFeed() {
+  const navigate = useNavigate()
   const [news, setNews] = useState(getNews())
   const [selectedCanton, setSelectedCanton] = useState('todos')
   const [selectedCategory, setSelectedCategory] = useState('todos')
@@ -133,41 +137,69 @@ export default function NewsFeed() {
                 className={`news-card ${item.isUrgent ? 'urgent-border' : ''}`}
                 onClick={() => setSelectedArticle(item)}
               >
-                <div className="news-card-header">
-                  <div className="news-tags-row">
-                    <span className="news-canton-chip">
-                      <MapPin size={11} /> {item.canton}
-                    </span>
-                    <span className="news-category-chip">
-                      {getCategoryIcon(item.category)} {item.category}
-                    </span>
-                    {item.isUrgent && (
-                      <span className="news-urgent-chip">
-                        <Flame size={12} /> URGENTE
+                {/* Imagen / Video Preview Thumbnail */}
+                {item.imageUrl && (
+                  <div className="news-card-media-banner">
+                    <img src={item.imageUrl} alt={item.title} className="news-card-media-img" />
+                    {item.mediaType === 'video' && (
+                      <span className="news-media-pill video-pill">
+                        <Video size={12} /> Video adjunto
                       </span>
                     )}
                   </div>
-                  <span className="news-date">
-                    <Calendar size={12} className="inline-icon" />{' '}
-                    {new Date(item.publishedAt).toLocaleDateString('es-CR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
+                )}
 
-                <h3 className="news-title">{item.title}</h3>
-                <p className="news-summary">{item.summary}</p>
-
-                <div className="news-card-footer">
-                  <div className="news-author">
-                    <Building2 size={13} className="inline-icon text-blue" />
-                    <span>{item.authorEntity}</span>
+                <div className="news-card-body-content">
+                  <div className="news-card-header">
+                    <div className="news-tags-row">
+                      <span className="news-canton-chip">
+                        <MapPin size={11} /> {item.canton}
+                      </span>
+                      <span className="news-category-chip">
+                        {getCategoryIcon(item.category)} {item.category}
+                      </span>
+                      {item.isUrgent && (
+                        <span className="news-urgent-chip">
+                          <Flame size={12} /> URGENTE
+                        </span>
+                      )}
+                    </div>
+                    <span className="news-date">
+                      <Calendar size={12} className="inline-icon" />{' '}
+                      {new Date(item.publishedAt).toLocaleDateString('es-CR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </span>
                   </div>
-                  <button type="button" className="btn-read-more">
-                    Leer aviso completo →
-                  </button>
+
+                  <h3 className="news-title">{item.title}</h3>
+                  <p className="news-summary">{item.summary}</p>
+
+                  <div className="news-card-footer">
+                    <div className="news-author">
+                      <Building2 size={13} className="inline-icon text-blue" />
+                      <span>{item.authorEntity}</span>
+                    </div>
+
+                    <div className="news-card-actions">
+                      <button
+                        type="button"
+                        className="btn-news-map-shortcut"
+                        title="Ver en el mapa en tiempo real"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigate(`/map?lat=${item.lat || 9.8644}&lng=${item.lng || -83.9194}&title=${encodeURIComponent(item.title)}`)
+                        }}
+                      >
+                        <Navigation size={12} className="inline-icon" /> Ver en mapa
+                      </button>
+                      <button type="button" className="btn-read-more">
+                        Detalles →
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </article>
             ))
@@ -201,6 +233,30 @@ export default function NewsFeed() {
                 </button>
               </div>
 
+              {/* Evidencia Multimedia en el Modal (Video o Foto) */}
+              {selectedArticle.videoUrl ? (
+                <div className="news-modal-media-frame">
+                  <video
+                    src={selectedArticle.videoUrl}
+                    poster={selectedArticle.imageUrl}
+                    controls
+                    playsInline
+                    className="news-modal-video-player"
+                  />
+                  <div className="media-caption-bar">
+                    <Video size={13} className="inline-icon" /> Video testimonial / evidencia de la situación en vivo
+                  </div>
+                </div>
+              ) : selectedArticle.imageUrl ? (
+                <div className="news-modal-media-frame">
+                  <img
+                    src={selectedArticle.imageUrl}
+                    alt={selectedArticle.title}
+                    className="news-modal-photo-img"
+                  />
+                </div>
+              ) : null}
+
               <h2>{selectedArticle.title}</h2>
 
               <div className="news-modal-meta">
@@ -218,18 +274,29 @@ export default function NewsFeed() {
                 <p>{selectedArticle.content}</p>
               </div>
 
-              {selectedArticle.officialLink && (
-                <div className="news-modal-link-box">
+              {/* Botón de Navegación Directa al Mapa */}
+              <div className="news-modal-cta-row">
+                <button
+                  type="button"
+                  className="btn-modal-map-link"
+                  onClick={() => {
+                    navigate(`/map?lat=${selectedArticle.lat || 9.8644}&lng=${selectedArticle.lng || -83.9194}&title=${encodeURIComponent(selectedArticle.title)}`)
+                  }}
+                >
+                  <Navigation size={15} className="inline-icon" /> Ver punto exacto en el Mapa en Tiempo Real
+                </button>
+
+                {selectedArticle.officialLink && (
                   <a
                     href={selectedArticle.officialLink}
                     target="_blank"
                     rel="noreferrer"
                     className="btn-official-external-link"
                   >
-                    Ver comunicado original en el portal de la Municipalidad <ExternalLink size={14} />
+                    Portal Municipal <ExternalLink size={13} />
                   </a>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

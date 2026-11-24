@@ -8,7 +8,8 @@ import {
   Modal,
   Linking,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Image
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, shadows } from '../theme/colors'
@@ -130,33 +131,61 @@ export default function NewsFeedScreen() {
                   activeOpacity={0.85}
                   onPress={() => setSelectedArticle(article)}
                 >
-                  <View style={styles.newsCardHeader}>
-                    <View style={styles.badgeRow}>
-                      <View style={[styles.categoryBadge, { backgroundColor: catColor + '18' }]}>
-                        <Text style={[styles.categoryBadgeText, { color: catColor }]}>
-                          {article.category}
-                        </Text>
+                  {/* Foto / Video Preview */}
+                  {article.imageUrl && (
+                    <View style={styles.cardImageContainer}>
+                      <Image source={{ uri: article.imageUrl }} style={styles.cardBannerImage} resizeMode="cover" />
+                      {article.mediaType === 'video' && (
+                        <View style={styles.videoBadgeTag}>
+                          <Ionicons name="videocam" size={11} color="#ffffff" />
+                          <Text style={styles.videoBadgeTagText}>Video</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  <View style={styles.cardBodyPadding}>
+                    <View style={styles.newsCardHeader}>
+                      <View style={styles.badgeRow}>
+                        <View style={[styles.categoryBadge, { backgroundColor: catColor + '18' }]}>
+                          <Text style={[styles.categoryBadgeText, { color: catColor }]}>
+                            {article.category}
+                          </Text>
+                        </View>
+                        <View style={styles.cantonBadge}>
+                          <Ionicons name="location-sharp" size={11} color={colors.primary} />
+                          <Text style={styles.cantonBadgeText}>{article.canton}</Text>
+                        </View>
                       </View>
-                      <View style={styles.cantonBadge}>
-                        <Ionicons name="location-sharp" size={11} color={colors.primary} />
-                        <Text style={styles.cantonBadgeText}>{article.canton}</Text>
-                      </View>
+
+                      {article.isUrgent && (
+                        <View style={styles.urgentBadge}>
+                          <Ionicons name="alert-circle" size={12} color="#ffffff" />
+                          <Text style={styles.urgentBadgeText}>URGENTE</Text>
+                        </View>
+                      )}
                     </View>
 
-                    {article.isUrgent && (
-                      <View style={styles.urgentBadge}>
-                        <Ionicons name="alert-circle" size={12} color="#ffffff" />
-                        <Text style={styles.urgentBadgeText}>URGENTE</Text>
+                    <Text style={styles.newsTitle}>{article.title}</Text>
+                    <Text style={styles.newsSummary} numberOfLines={2}>{article.summary}</Text>
+
+                    <View style={styles.newsFooter}>
+                      <Text style={styles.newsAuthor} numberOfLines={1}>{article.authorEntity}</Text>
+                      <View style={styles.newsActionsRow}>
+                        <TouchableOpacity
+                          style={styles.btnCardMapLink}
+                          onPress={() => {
+                            const lat = article.lat || 9.8644
+                            const lng = article.lng || -83.9194
+                            Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`)
+                          }}
+                        >
+                          <Ionicons name="navigate" size={12} color={colors.primary} />
+                          <Text style={styles.btnCardMapLinkText}>Mapa</Text>
+                        </TouchableOpacity>
+                        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
                       </View>
-                    )}
-                  </View>
-
-                  <Text style={styles.newsTitle}>{article.title}</Text>
-                  <Text style={styles.newsSummary} numberOfLines={2}>{article.summary}</Text>
-
-                  <View style={styles.newsFooter}>
-                    <Text style={styles.newsAuthor} numberOfLines={1}>{article.authorEntity}</Text>
-                    <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                    </View>
                   </View>
                 </TouchableOpacity>
               )
@@ -190,6 +219,19 @@ export default function NewsFeedScreen() {
               </View>
 
               <ScrollView style={styles.modalScroll}>
+                {/* Foto / Video en Modal */}
+                {selectedArticle.imageUrl && (
+                  <View style={styles.modalImageWrapper}>
+                    <Image source={{ uri: selectedArticle.imageUrl }} style={styles.modalImage} resizeMode="cover" />
+                    {selectedArticle.mediaType === 'video' && (
+                      <View style={styles.modalVideoTag}>
+                        <Ionicons name="videocam" size={13} color="#ffffff" />
+                        <Text style={styles.modalVideoTagText}>Video de situación en vivo</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
                 <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
 
                 <View style={styles.modalMetaRow}>
@@ -199,12 +241,27 @@ export default function NewsFeedScreen() {
 
                 <Text style={styles.modalBodyText}>{selectedArticle.content}</Text>
 
+                {/* Botón de Mapa en Tiempo Real */}
+                <TouchableOpacity
+                  style={styles.btnOpenMapRealtime}
+                  onPress={() => {
+                    const lat = selectedArticle.lat || 9.8644
+                    const lng = selectedArticle.lng || -83.9194
+                    setSelectedArticle(null)
+                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`)
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="map" size={17} color="#ffffff" />
+                  <Text style={styles.btnOpenMapRealtimeText}>Ver punto exacto en el Mapa en Tiempo Real</Text>
+                </TouchableOpacity>
+
                 {selectedArticle.officialLink && (
                   <TouchableOpacity
                     style={styles.btnExternalLink}
                     onPress={() => Linking.openURL(selectedArticle.officialLink)}
                   >
-                    <Ionicons name="open-outline" size={16} color="#ffffff" />
+                    <Ionicons name="open-outline" size={16} color={colors.primary} />
                     <Text style={styles.btnExternalLinkText}>Abrir comunicado oficial municipal</Text>
                   </TouchableOpacity>
                 )}
@@ -318,10 +375,41 @@ const styles = StyleSheet.create({
   newsCard: {
     backgroundColor: '#ffffff',
     borderRadius: 14,
-    padding: 16,
+    padding: 0,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.sm,
+  },
+  cardImageContainer: {
+    width: '100%',
+    height: 140,
+    backgroundColor: colors.bgSubtle,
+    position: 'relative',
+  },
+  cardBannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  videoBadgeTag: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  videoBadgeTagText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  cardBodyPadding: {
+    padding: 14,
   },
   newsCardHeader: {
     flexDirection: 'row',
@@ -394,6 +482,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
+  newsActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  btnCardMapLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  btnCardMapLinkText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -418,6 +525,36 @@ const styles = StyleSheet.create({
   modalScroll: {
     marginBottom: 20,
   },
+  modalImageWrapper: {
+    width: '100%',
+    height: 190,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 14,
+    position: 'relative',
+    backgroundColor: colors.bgSubtle,
+  },
+  modalImage: {
+    width: '100%',
+    height: 190,
+  },
+  modalVideoTag: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  modalVideoTagText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
@@ -441,6 +578,22 @@ const styles = StyleSheet.create({
     color: colors.textMain,
     lineHeight: 22,
     marginBottom: 20,
+  },
+  btnOpenMapRealtime: {
+    backgroundColor: '#dc2626',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  btnOpenMapRealtimeText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontWeight: '700',
   },
   btnExternalLink: {
     backgroundColor: colors.primary,
