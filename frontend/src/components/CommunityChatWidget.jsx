@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import * as signalR from '@microsoft/signalr'
 import {
   MessageSquare,
   Send,
@@ -59,8 +60,56 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      loadMessages()
+    if (!isOpen) return
+
+    loadMessages()
+
+    // 1. Polling silencioso en tiempo real cada 1.5s
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await getMessagesByTicket(ticketCode)
+        if (Array.isArray(fresh)) {
+          setMessages(prev => {
+            if (fresh.length !== prev.length || (fresh.length > 0 && fresh[fresh.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+              return fresh
+            }
+            return prev
+          })
+        }
+      } catch {
+        // Silencioso
+      }
+    }, 1500)
+
+    // 2. Conexión SignalR instantánea
+    let connection = null
+    try {
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl('http://localhost:5000/chatHub')
+        .withAutomaticReconnect()
+        .build()
+
+      connection.on('ReceiveMessage', (msg) => {
+        if (msg && msg.ticketCode && msg.ticketCode.toUpperCase() === ticketCode.toUpperCase()) {
+          setMessages(prev => {
+            if (!prev.some(m => m.id === msg.id)) {
+              return [...prev, msg]
+            }
+            return prev
+          })
+        }
+      })
+
+      connection.start().catch(() => {})
+    } catch {
+      // Polling activo como respaldo
+    }
+
+    return () => {
+      clearInterval(interval)
+      if (connection) {
+        connection.stop()
+      }
     }
   }, [isOpen, ticketCode])
 

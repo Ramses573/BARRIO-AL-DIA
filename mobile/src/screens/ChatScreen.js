@@ -54,7 +54,27 @@ export default function ChatScreen({ route }) {
 
   useEffect(() => {
     loadChat()
+
+    // Sincronización en tiempo real cada 1.5s para recibir mensajes instantáneamente
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await getMessagesByTicket(ticketCode)
+        if (Array.isArray(fresh)) {
+          setMessages(prev => {
+            if (fresh.length !== prev.length || (fresh.length > 0 && fresh[fresh.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)
+              return fresh
+            }
+            return prev
+          })
+        }
+      } catch {
+        // Silencioso
+      }
+    }, 1500)
+
     return () => {
+      clearInterval(interval)
       if (sound) sound.unloadAsync()
       if (timerRef.current) clearInterval(timerRef.current)
     }

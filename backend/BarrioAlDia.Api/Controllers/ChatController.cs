@@ -84,8 +84,8 @@ public class ChatController : ControllerBase
             IsRead = message.IsRead
         };
 
-        // Broadcast en tiempo real vía SignalR al grupo del ticket
-        await _hubContext.Clients.Group(resultDto.TicketCode).SendAsync("ReceiveMessage", resultDto);
+        // Broadcast en tiempo real vía SignalR
+        await _hubContext.Clients.All.SendAsync("ReceiveMessage", resultDto);
 
         return Ok(resultDto);
     }

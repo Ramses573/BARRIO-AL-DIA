@@ -45,7 +45,7 @@ export const getMessagesByTicket = async (ticketCode) => {
   // 1. Intentar backend .NET 9
   try {
     const apiMessages = await apiGet(`/chat/ticket/${encodeURIComponent(code)}`)
-    if (Array.isArray(apiMessages) && apiMessages.length > 0) {
+    if (Array.isArray(apiMessages)) {
       await AsyncStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(apiMessages))
       return apiMessages
     }
