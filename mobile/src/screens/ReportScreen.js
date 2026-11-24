@@ -10,13 +10,15 @@ import {
   Alert,
   Modal,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  Linking
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import * as ImagePicker from 'expo-image-picker'
 import { colors, shadows } from '../theme/colors'
 import { addIncident } from '../services/incidentService'
+import { getWebMapUrl } from '../config'
 
 const CATEGORIES = [
   { name: 'Inundación', icon: 'water', color: colors.water },
@@ -468,6 +470,20 @@ export default function ReportScreen({ navigation }) {
                   <Text style={styles.btnModalTrackText}>Rastrear Ticket</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.btnModalMap}
+                  onPress={() => {
+                    const lat = createdTicket.lat || 9.8644
+                    const lng = createdTicket.lng || -83.9194
+                    const title = createdTicket.title || 'Reporte'
+                    resetForm()
+                    Linking.openURL(getWebMapUrl(lat, lng, title))
+                  }}
+                >
+                  <Ionicons name="map" size={16} color="#ffffff" />
+                  <Text style={styles.btnModalMapText}>Ver en Mapa Web</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.btnModalNew} onPress={resetForm}>
                   <Text style={styles.btnModalNewText}>Crear otro reporte</Text>
                 </TouchableOpacity>
@@ -803,6 +819,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   btnModalTrackText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  btnModalMap: {
+    backgroundColor: '#0284c7',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  btnModalMapText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '700',

@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { colors, shadows } from '../theme/colors'
 import { getNews } from '../services/newsService'
+import { getWebMapUrl } from '../config'
 
 const CANTONES = ['todos', 'Cartago', 'Turrialba', 'Tarrazú']
 
@@ -131,16 +132,10 @@ export default function NewsFeedScreen() {
                   activeOpacity={0.85}
                   onPress={() => setSelectedArticle(article)}
                 >
-                  {/* Foto / Video Preview */}
+                  {/* Fotografía de la Noticia */}
                   {article.imageUrl && (
                     <View style={styles.cardImageContainer}>
                       <Image source={{ uri: article.imageUrl }} style={styles.cardBannerImage} resizeMode="cover" />
-                      {article.mediaType === 'video' && (
-                        <View style={styles.videoBadgeTag}>
-                          <Ionicons name="videocam" size={11} color="#ffffff" />
-                          <Text style={styles.videoBadgeTagText}>Video</Text>
-                        </View>
-                      )}
                     </View>
                   )}
 
@@ -175,9 +170,8 @@ export default function NewsFeedScreen() {
                         <TouchableOpacity
                           style={styles.btnCardMapLink}
                           onPress={() => {
-                            const lat = article.lat || 9.8644
-                            const lng = article.lng || -83.9194
-                            Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`)
+                            const url = getWebMapUrl(article.lat, article.lng, article.title)
+                            Linking.openURL(url)
                           }}
                         >
                           <Ionicons name="navigate" size={12} color={colors.primary} />
@@ -219,16 +213,10 @@ export default function NewsFeedScreen() {
               </View>
 
               <ScrollView style={styles.modalScroll}>
-                {/* Foto / Video en Modal */}
+                {/* Fotografía de la Noticia */}
                 {selectedArticle.imageUrl && (
                   <View style={styles.modalImageWrapper}>
                     <Image source={{ uri: selectedArticle.imageUrl }} style={styles.modalImage} resizeMode="cover" />
-                    {selectedArticle.mediaType === 'video' && (
-                      <View style={styles.modalVideoTag}>
-                        <Ionicons name="videocam" size={13} color="#ffffff" />
-                        <Text style={styles.modalVideoTagText}>Video de situación en vivo</Text>
-                      </View>
-                    )}
                   </View>
                 )}
 
@@ -241,30 +229,19 @@ export default function NewsFeedScreen() {
 
                 <Text style={styles.modalBodyText}>{selectedArticle.content}</Text>
 
-                {/* Botón de Mapa en Tiempo Real */}
+                {/* Botón de Mapa en Tiempo Real en la App Web */}
                 <TouchableOpacity
                   style={styles.btnOpenMapRealtime}
                   onPress={() => {
-                    const lat = selectedArticle.lat || 9.8644
-                    const lng = selectedArticle.lng || -83.9194
+                    const url = getWebMapUrl(selectedArticle.lat, selectedArticle.lng, selectedArticle.title)
                     setSelectedArticle(null)
-                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`)
+                    Linking.openURL(url)
                   }}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="map" size={17} color="#ffffff" />
                   <Text style={styles.btnOpenMapRealtimeText}>Ver punto exacto en el Mapa en Tiempo Real</Text>
                 </TouchableOpacity>
-
-                {selectedArticle.officialLink && (
-                  <TouchableOpacity
-                    style={styles.btnExternalLink}
-                    onPress={() => Linking.openURL(selectedArticle.officialLink)}
-                  >
-                    <Ionicons name="open-outline" size={16} color={colors.primary} />
-                    <Text style={styles.btnExternalLinkText}>Abrir comunicado oficial municipal</Text>
-                  </TouchableOpacity>
-                )}
               </ScrollView>
             </View>
           </View>
@@ -390,23 +367,6 @@ const styles = StyleSheet.create({
   cardBannerImage: {
     width: '100%',
     height: '100%',
-  },
-  videoBadgeTag: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: 'rgba(0,0,0,0.72)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  videoBadgeTagText: {
-    color: '#ffffff',
-    fontSize: 10.5,
-    fontWeight: '700',
   },
   cardBodyPadding: {
     padding: 14,
@@ -538,23 +498,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 190,
   },
-  modalVideoTag: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  modalVideoTagText: {
-    color: '#ffffff',
-    fontSize: 11.5,
-    fontWeight: '700',
-  },
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
@@ -593,21 +536,6 @@ const styles = StyleSheet.create({
   btnOpenMapRealtimeText: {
     color: '#ffffff',
     fontSize: 13.5,
-    fontWeight: '700',
-  },
-  btnExternalLink: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  btnExternalLinkText: {
-    color: '#ffffff',
-    fontSize: 13,
     fontWeight: '700',
   },
 })

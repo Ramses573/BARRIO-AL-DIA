@@ -7,11 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
+  Linking
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, shadows } from '../theme/colors'
 import { getIncidentByTicket } from '../services/incidentService'
+import { getWebMapUrl } from '../config'
 
 const STAGES = [
   { id: 'Recibido', label: '1. Recibido' },
@@ -143,6 +145,19 @@ export default function TrackScreen({ route, navigation }) {
             <Ionicons name="location" size={14} color={colors.primary} />
             <Text style={styles.locText}>{incident.location}</Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.btnOpenWebMap}
+            onPress={() => {
+              const lat = incident.lat || 9.8644
+              const lng = incident.lng || -83.9194
+              Linking.openURL(getWebMapUrl(lat, lng, incident.title))
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="map" size={14} color={colors.primary} />
+            <Text style={styles.btnOpenWebMapText}>Ver en el Mapa en Tiempo Real</Text>
+          </TouchableOpacity>
 
           <Text style={styles.descText}>{incident.description}</Text>
 
@@ -355,13 +370,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   locText: {
     fontSize: 12.5,
     color: colors.textMuted,
     fontWeight: '500',
     flexShrink: 1,
+  },
+  btnOpenWebMap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary + '14',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  btnOpenWebMapText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   descText: {
     fontSize: 13,

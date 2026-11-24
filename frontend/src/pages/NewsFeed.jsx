@@ -6,7 +6,6 @@ import {
   MapPin,
   Calendar,
   Building2,
-  ExternalLink,
   Filter,
   CheckCircle2,
   Flame,
@@ -16,7 +15,6 @@ import {
   Radio,
   PlusCircle,
   X,
-  Video,
   Navigation
 } from 'lucide-react'
 import { fetchNewsFromApi, getNews } from '../services/newsService'
@@ -137,15 +135,18 @@ export default function NewsFeed() {
                 className={`news-card ${item.isUrgent ? 'urgent-border' : ''}`}
                 onClick={() => setSelectedArticle(item)}
               >
-                {/* Imagen / Video Preview Thumbnail */}
+                {/* Imagen Preview Thumbnail */}
                 {item.imageUrl && (
                   <div className="news-card-media-banner">
-                    <img src={item.imageUrl} alt={item.title} className="news-card-media-img" />
-                    {item.mediaType === 'video' && (
-                      <span className="news-media-pill video-pill">
-                        <Video size={12} /> Video adjunto
-                      </span>
-                    )}
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="news-card-media-img"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                      }}
+                    />
                   </div>
                 )}
 
@@ -233,29 +234,19 @@ export default function NewsFeed() {
                 </button>
               </div>
 
-              {/* Evidencia Multimedia en el Modal (Video o Foto) */}
-              {selectedArticle.videoUrl ? (
-                <div className="news-modal-media-frame">
-                  <video
-                    src={selectedArticle.videoUrl}
-                    poster={selectedArticle.imageUrl}
-                    controls
-                    playsInline
-                    className="news-modal-video-player"
-                  />
-                  <div className="media-caption-bar">
-                    <Video size={13} className="inline-icon" /> Video testimonial / evidencia de la situación en vivo
-                  </div>
-                </div>
-              ) : selectedArticle.imageUrl ? (
+              {/* Fotografía de la Noticia en Alta Resolución */}
+              {selectedArticle.imageUrl && (
                 <div className="news-modal-media-frame">
                   <img
                     src={selectedArticle.imageUrl}
                     alt={selectedArticle.title}
                     className="news-modal-photo-img"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                    }}
                   />
                 </div>
-              ) : null}
+              )}
 
               <h2>{selectedArticle.title}</h2>
 
@@ -285,17 +276,6 @@ export default function NewsFeed() {
                 >
                   <Navigation size={15} className="inline-icon" /> Ver punto exacto en el Mapa en Tiempo Real
                 </button>
-
-                {selectedArticle.officialLink && (
-                  <a
-                    href={selectedArticle.officialLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-official-external-link"
-                  >
-                    Portal Municipal <ExternalLink size={13} />
-                  </a>
-                )}
               </div>
             </div>
           </div>

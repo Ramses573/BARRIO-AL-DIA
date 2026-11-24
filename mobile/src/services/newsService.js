@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { apiGet } from './api'
 
-const NEWS_STORAGE_KEY = '@barrio_cantonal_news'
+const NEWS_STORAGE_KEY = '@barrio_cantonal_news_v2'
 
 export const INITIAL_NEWS = [
   {
@@ -15,12 +15,12 @@ export const INITIAL_NEWS = [
     lat: 9.8644,
     lng: -83.9194,
     imageUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    mediaType: 'video',
+    videoUrl: null,
+    mediaType: 'image',
     authorEntity: 'Municipalidad de Cartago - Obras Públicas',
     publishedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
     isUrgent: true,
-    officialLink: 'https://muni-cartago.go.cr/comunicados/recarpeteo-nov-2026'
+    officialLink: null
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ export const INITIAL_NEWS = [
     authorEntity: 'Municipalidad de Turrialba - Acueductos',
     publishedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
     isUrgent: false,
-    officialLink: 'https://muni-turrialba.go.cr/avisos/acueducto-el-mora'
+    officialLink: null
   },
   {
     id: 3,
@@ -51,12 +51,12 @@ export const INITIAL_NEWS = [
     lat: 9.6611,
     lng: -84.0206,
     imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800&auto=format&fit=crop&q=80',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    mediaType: 'video',
+    videoUrl: null,
+    mediaType: 'image',
     authorEntity: 'Municipalidad de Tarrazú - Gestión Vial',
     publishedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
     isUrgent: false,
-    officialLink: 'https://munitarrazu.go.cr/obras/ruta-cafetalera'
+    officialLink: null
   }
 ]
 

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { colors } from '../theme/colors'
 
 import NewsFeedScreen from '../screens/NewsFeedScreen'
+import MapScreen from '../screens/MapScreen'
 import ReportScreen from '../screens/ReportScreen'
 import TrackScreen from '../screens/TrackScreen'
 import ChatScreen from '../screens/ChatScreen'
@@ -36,13 +37,15 @@ export default function AppNavigator() {
           paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: '700',
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName
           if (route.name === 'Noticias') {
             iconName = focused ? 'newspaper' : 'newspaper-outline'
+          } else if (route.name === 'Mapa') {
+            iconName = focused ? 'map' : 'map-outline'
           } else if (route.name === 'Reportar') {
             iconName = focused ? 'add-circle' : 'add-circle-outline'
           } else if (route.name === 'Rastrear') {
@@ -60,6 +63,14 @@ export default function AppNavigator() {
         options={{
           title: 'Boletín Cantonal',
           tabBarLabel: 'Noticias'
+        }}
+      />
+      <Tab.Screen
+        name="Mapa"
+        component={MapScreen}
+        options={{
+          title: 'Mapa en Tiempo Real',
+          tabBarLabel: 'Mapa'
         }}
       />
       <Tab.Screen
