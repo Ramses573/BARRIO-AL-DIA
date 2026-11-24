@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import { ToastProvider } from './components/Toast'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import OfflineSyncBanner from './components/OfflineSyncBanner'
 import Home from './pages/Home'
 import ReportIncident from './pages/ReportIncident'
 import Incidents from './pages/Incidents'
@@ -30,6 +31,7 @@ export default function App() {
     <ToastProvider>
       <Router>
         <Navbar />
+        <OfflineSyncBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/report" element={<ReportIncident />} />
