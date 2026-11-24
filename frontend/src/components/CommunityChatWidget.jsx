@@ -144,6 +144,24 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    if (isOpen) {
+      const fetchOnOpen = async () => {
+        try {
+          const fresh = await getMessagesByTicket(ticketCode)
+          if (Array.isArray(fresh)) {
+            setMessages(fresh)
+          }
+        } catch {
+          // Fallback
+        }
+      }
+      fetchOnOpen()
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 60)
+    }
+  }, [isOpen, ticketCode])
 
   // Envío de mensaje de texto
   const handleSendText = async (e) => {
@@ -161,7 +179,15 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       content: textToSend
     })
 
-    setMessages(prev => [...prev, sent])
+    if (sent) {
+      setMessages(prev => {
+        if (!prev.some(m => m.id === sent.id)) {
+          return [...prev, sent]
+        }
+        return prev
+      })
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
   }
 
   // Iniciar grabación de audio
@@ -194,7 +220,15 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
             audioDurationSeconds: duration
           })
 
-          setMessages(prev => [...prev, sent])
+          if (sent) {
+            setMessages(prev => {
+              if (!prev.some(m => m.id === sent.id)) {
+                return [...prev, sent]
+              }
+              return prev
+            })
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+          }
           addToast('Nota de voz enviada correctamente', 'success')
         }
 

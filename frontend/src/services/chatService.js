@@ -3,9 +3,15 @@
  * Soporta texto y notas de voz grabadas en navegador o móvil
  */
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-  ? import.meta.env.VITE_API_URL
-  : 'http://localhost:5000/api'
+export const getApiBase = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:5000/api`
+  }
+  return 'http://localhost:5000/api'
+}
 
 const CHAT_STORAGE_PREFIX = 'barrio_chat_ticket_'
 
@@ -47,21 +53,20 @@ const INITIAL_DEMO_MESSAGES = {
 
 export const getMessagesByTicket = async (ticketCode) => {
   const code = (ticketCode || 'GENERAL').trim().toUpperCase()
+  const apiBase = getApiBase()
 
   try {
-    const res = await fetch(`${API_BASE}/chat/ticket/${encodeURIComponent(code)}?_t=${Date.now()}`, {
+    const res = await fetch(`${apiBase}/chat/ticket/${encodeURIComponent(code)}?_t=${Date.now()}`, {
       cache: 'no-store',
       headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
     })
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data)) {
-        if (data.length > 0 || !INITIAL_DEMO_MESSAGES[code]) {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
-          }
-          return data
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
         }
+        return data
       }
     }
   } catch {
@@ -106,16 +111,17 @@ export const sendChatMessage = async ({ ticketCode, senderName, senderRole, mess
   }
 
   let createdMessage = null
+  const apiBase = getApiBase()
 
   try {
-    let res = await fetch(`${API_BASE}/chat/send`, {
+    let res = await fetch(`${apiBase}/chat/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
     if (!res.ok) {
-      await new Promise(r => setTimeout(r, 500))
-      res = await fetch(`${API_BASE}/chat/send`, {
+      await new Promise(r => setTimeout(r, 400))
+      res = await fetch(`${apiBase}/chat/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -137,12 +143,16 @@ export const sendChatMessage = async ({ ticketCode, senderName, senderRole, mess
     }
   }
 
-  // Guardar en caché local
+  // Guardar en caché local sin duplicar
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
-      const current = await getMessagesByTicket(code)
-      const updated = [...current, createdMessage]
-      window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(updated))
+      const stored = window.localStorage.getItem(`${CHAT_STORAGE_PREFIX}${code}`)
+      let list = stored ? JSON.parse(stored) : []
+      if (!Array.isArray(list)) list = []
+      if (!list.some(m => m.id === createdMessage.id)) {
+        list.push(createdMessage)
+        window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(list))
+      }
     } catch {
       // Fallback
     }

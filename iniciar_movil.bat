@@ -12,9 +12,7 @@ cd /d "%~dp0"
 echo [1/3] Verificando dependencias moviles...
 if not exist "mobile\node_modules\" (
     echo [INFO] Instalando dependencias de la App Movil...
-    cd mobile
-    call npm install
-    cd ..
+    cd mobile && call npm install && cd ..
     echo.
 )
 
@@ -24,8 +22,8 @@ netstat -aon | findstr :5000 | findstr LISTENING >nul
 if errorlevel 1 (
     echo [INFO] Iniciando Backend en segundo plano...
     start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll --urls "http://0.0.0.0:5000" > backend_mobile.log 2>&1
-    echo [INFO] Esperando a que el backend inicialice la base de datos...
-    powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
+    echo [INFO] Calentando Base de Datos y canal de chat en tiempo real...
+    powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { $null = Invoke-RestMethod -Uri http://localhost:5000/api/chat/ticket/GENERAL -TimeoutSec 2 -ErrorAction SilentlyContinue; exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
 ) else (
     echo [OK] Backend API ya esta activo y escuchando en el puerto 5000.
 )

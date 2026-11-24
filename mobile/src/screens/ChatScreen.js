@@ -159,8 +159,15 @@ export default function ChatScreen({ route }) {
       content: text
     })
 
-    setMessages(prev => [...prev, sent])
-    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)
+    if (sent) {
+      setMessages(prev => {
+        if (!prev.some(m => m.id === sent.id)) {
+          return [...prev, sent]
+        }
+        return prev
+      })
+      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50)
+    }
   }
 
   // Iniciar grabación de audio nativa con expo-av
@@ -218,8 +225,15 @@ export default function ChatScreen({ route }) {
         audioDurationSeconds: duration
       })
 
-      setMessages(prev => [...prev, sent])
-      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)
+      if (sent) {
+        setMessages(prev => {
+          if (!prev.some(m => m.id === sent.id)) {
+            return [...prev, sent]
+          }
+          return prev
+        })
+        setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50)
+      }
     } catch {
       Alert.alert('Error', 'Fallo al procesar la nota de voz grabada')
     }

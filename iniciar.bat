@@ -14,20 +14,18 @@ sqllocaldb start MSSQLLocalDB >nul 2>&1
 
 if not exist "frontend\node_modules\" (
     echo [INFO] Instalando dependencias del Frontend...
-    cd frontend
-    call npm install
-    cd ..
+    cd frontend && call npm install && cd ..
     echo.
 )
 
 echo [2/4] Liberando puertos 3000 y 5000 si estuvieran ocupados...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { taskkill /F /T /PID $_.OwningProcess >$null 2>&1 } }" >nul 2>&1
 
-echo [3/4] Iniciando Backend .NET 9 API (Puerto 5000)...
+echo [3/4] Iniciando Backend .NET 9 API (Puerto 5000 en 0.0.0.0)...
 start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll --urls "http://0.0.0.0:5000" > backend.log 2>&1
 
-echo [INFO] Esperando a que el backend inicialice la base de datos...
-powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
+echo [INFO] Calentando Base de Datos y canal de chat en tiempo real...
+powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { $null = Invoke-RestMethod -Uri http://localhost:5000/api/chat/ticket/GENERAL -TimeoutSec 2 -ErrorAction SilentlyContinue; exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
 
 echo [4/4] Abriendo Frontend React en el navegador...
 start http://localhost:3000

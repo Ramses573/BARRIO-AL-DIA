@@ -78,46 +78,51 @@ export const getMessagesByTicket = async (ticketCode) => {
 
 export const sendChatMessage = async (msgData) => {
   const code = (msgData.ticketCode || 'GENERAL').trim().toUpperCase()
-  const current = await getMessagesByTicket(code)
 
-  const newMsg = {
-    id: Date.now() + Math.floor(Math.random() * 1000),
+  const payload = {
     ticketCode: code,
     senderName: msgData.senderName || 'Vecino Comunitario',
     senderRole: msgData.senderRole || 'Ciudadano',
     messageType: msgData.messageType || 'Text',
     content: msgData.content || '',
-    audioDurationSeconds: msgData.audioDurationSeconds || 0,
-    audioUri: msgData.audioUri || null,
-    sentAt: new Date().toISOString(),
-    isRead: false
+    audioDurationSeconds: msgData.audioDurationSeconds || 0
   }
 
-  const updated = [...current, newMsg]
-  await AsyncStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(updated))
+  let finalMsg = null
 
-  // Enviar a la API .NET 9 con reintento automático
-  const payload = {
-    ticketCode: newMsg.ticketCode,
-    senderName: newMsg.senderName,
-    senderRole: newMsg.senderRole,
-    messageType: newMsg.messageType,
-    content: newMsg.content,
-    audioDurationSeconds: newMsg.audioDurationSeconds
-  }
-
+  // Intentar envío a backend .NET 9 con reintento rápido (300ms)
   try {
     let apiResult = await apiPost('/chat/send', payload)
     if (!apiResult) {
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 300))
       apiResult = await apiPost('/chat/send', payload)
     }
     if (apiResult && apiResult.id) {
-      return apiResult
+      finalMsg = apiResult
     }
   } catch {
-    // Se mantiene en caché local
+    // Modo offline
   }
 
-  return newMsg
+  if (!finalMsg) {
+    finalMsg = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      ...payload,
+      audioUri: msgData.audioUri || null,
+      sentAt: new Date().toISOString(),
+      isRead: false
+    }
+  }
+
+  try {
+    const current = await getMessagesByTicket(code)
+    if (!current.some(m => m.id === finalMsg.id)) {
+      const updated = [...current, finalMsg]
+      await AsyncStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(updated))
+    }
+  } catch {
+    // Fallback
+  }
+
+  return finalMsg
 }

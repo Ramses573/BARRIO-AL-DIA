@@ -92,11 +92,17 @@ app.MapGet("/", () => Results.Ok(new
     academic = "Colegio Universitario de Cartago - TI-155"
 }));
 
-app.MapGet("/api/health", () => Results.Ok(new
+app.MapGet("/api/health", async (BarrioDbContext db) =>
 {
-    status = "Healthy",
-    serverTime = DateTime.UtcNow
-}));
+    var count = await db.ChatMessages.CountAsync();
+    return Results.Ok(new
+    {
+        status = "Healthy",
+        serverTime = DateTime.UtcNow,
+        database = "Connected",
+        totalChatMessages = count
+    });
+});
 
 // Aplicar creación y seed data de base de datos SQL Server
 using (var scope = app.Services.CreateScope())
