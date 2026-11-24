@@ -8,6 +8,7 @@
     "build": "npm run build --prefix frontend",
     "test": "npm run test --prefix frontend",
     "lint": "npm run lint --prefix frontend",
-    "mobile:start": "npm start --prefix mobile"
+    "mobile:start": "npm run tunnel --prefix mobile",
+    "mobile:lan": "npm start --prefix mobile"
   }
 }
