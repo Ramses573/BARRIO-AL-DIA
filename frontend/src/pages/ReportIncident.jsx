@@ -21,7 +21,9 @@ import {
   Clock,
   Sparkles,
   Copy,
-  Check
+  Check,
+  Video,
+  Film
 } from 'lucide-react'
 import { addIncident } from '../services/incidentService'
 import { isAuthenticated } from '../services/authService'
@@ -53,6 +55,7 @@ export default function ReportIncident() {
     urgency: 'Media',
     description: 'La calle principal presenta acumulación de agua. Se recomienda transitar con precaución y utilizar una ruta alterna.',
     photos: [],
+    video: null,
     isAnonymous: false,
     confirmed: true
   })
@@ -268,6 +271,39 @@ export default function ReportIncident() {
     addToast('Fotografía eliminada del reporte', 'info')
   }
 
+  const handleVideoSelect = (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      addToast(`"${file.name}" no es un formato de video válido (use MP4, WebM o MOV).`, 'warning')
+      return
+    }
+
+    const maxBytes = 20 * 1024 * 1024 // 20 MB
+    if (file.size > maxBytes) {
+      addToast('El archivo supera los 20 MB permitidos (aprox. 15-20 segundos). Comprímelo o graba un fragmento más corto.', 'error')
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setForm(prev => ({
+      ...prev,
+      video: {
+        name: file.name,
+        preview: previewUrl,
+        sizeMb: (file.size / (1024 * 1024)).toFixed(1)
+      }
+    }))
+    addToast('Video de evidencia adjuntado correctamente', 'success')
+    e.target.value = ''
+  }
+
+  const handleRemoveVideo = () => {
+    setForm(prev => ({ ...prev, video: null }))
+    addToast('Video de evidencia eliminado', 'info')
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -292,6 +328,7 @@ export default function ReportIncident() {
       photo: primaryPhoto ? primaryPhoto.name : null,
       image: primaryPhoto ? primaryPhoto.preview : null,
       photos: form.photos.map(p => ({ name: p.name, preview: p.preview })),
+      video: form.video ? { name: form.video.name, preview: form.video.preview, sizeMb: form.video.sizeMb } : null,
       urgency: form.urgency,
       gpsAccuracy: form.gpsAccuracy,
       isAnonymous: form.isAnonymous,
@@ -625,6 +662,62 @@ export default function ReportIncident() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. Video Corto de Evidencia (Opcional - máx 20 MB / 15-20 s) */}
+                <div className="pdf-input-group">
+                  <div className="input-label-row">
+                    <label>
+                      <Film size={15} className="inline-icon text-blue" /> 5. Video corto de evidencia (opcional, máx. 20 MB / ~20 s)
+                    </label>
+                    {form.video && (
+                      <span className="photos-counter-tag video-tag">
+                        1 video cargado ({form.video.sizeMb} MB)
+                      </span>
+                    )}
+                  </div>
+
+                  {!form.video ? (
+                    <div className="video-upload-box">
+                      <label className="video-upload-label">
+                        <Video size={28} className="video-upload-icon text-blue" />
+                        <strong>Adjuntar video testimonial o de situación en vivo</strong>
+                        <span className="dropzone-hint">Formatos MP4, WebM o MOV hasta 20 MB</span>
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime,video/*"
+                          style={{ display: 'none' }}
+                          onChange={handleVideoSelect}
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="video-preview-card">
+                      <div className="video-player-frame">
+                        <video
+                          src={form.video.preview}
+                          controls
+                          playsInline
+                          className="evidence-video-player"
+                        />
+                      </div>
+                      <div className="video-info-row">
+                        <div className="video-info-text">
+                          <Film size={14} className="inline-icon text-blue" />
+                          <span className="video-filename" title={form.video.name}>{form.video.name}</span>
+                          <span className="video-filesize">{form.video.sizeMb} MB</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-trash-video"
+                          onClick={handleRemoveVideo}
+                          title="Eliminar video"
+                        >
+                          <Trash2 size={14} /> Eliminar
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search } from 'lucide-react'
+import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search, Newspaper } from 'lucide-react'
 import { THEMES, getCurrentTheme, applyTheme } from '../services/themeService'
 import { isAuthenticated, getCurrentOfficial, logout } from '../services/authService'
 import ProfileModal from './ProfileModal'
@@ -80,6 +80,11 @@ export default function Navbar() {
                 <li>
                   <Link to="/notifications" className={location.pathname === '/notifications' ? 'active' : ''}>
                     <Bell size={15} className="nav-icon" /> Alertas
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/noticias" className={location.pathname === '/noticias' ? 'active' : ''}>
+                    <Newspaper size={15} className="nav-icon" /> Noticias
                   </Link>
                 </li>
                 <li>

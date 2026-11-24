@@ -950,3 +950,114 @@
     height: auto;
   }
 }
+
+/* ==========================================================================
+   Sección de Video de Evidencia (Máx 20 MB / 15-20s)
+   ========================================================================== */
+.video-tag {
+  background: #ede9fe !important;
+  color: #6d28d9 !important;
+}
+
+.video-upload-box {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.video-upload-box:hover {
+  border-color: #6366f1;
+  background: #f5f3ff;
+}
+
+.video-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.video-upload-icon {
+  color: #6366f1;
+}
+
+.video-preview-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.video-player-frame {
+  background: #0f172a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 260px;
+}
+
+.evidence-video-player {
+  max-width: 100%;
+  max-height: 260px;
+  outline: none;
+}
+
+.video-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.video-info-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-main, #334155);
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.video-filename {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-filesize {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.btn-trash-video {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-trash-video:hover {
+  background: #fecaca;
+}
+

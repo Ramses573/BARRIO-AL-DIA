@@ -71,6 +71,7 @@ export default function Footer() {
           <ul className="footer-nav-links">
             <li><Link to="/">Inicio y Estadísticas</Link></li>
             <li><Link to="/map">Mapa Cantonal en Tiempo Real</Link></li>
+            <li><Link to="/noticias">Boletín de Noticias Cantonales</Link></li>
             <li><Link to="/report">Portal de Reporte Ciudadano</Link></li>
             <li><Link to="/track">Seguimiento de Ticket por Código</Link></li>
             <li><Link to="/incidents">Listado de Incidencias Públicas</Link></li>

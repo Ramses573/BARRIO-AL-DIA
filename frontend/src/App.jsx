@@ -13,6 +13,8 @@ import Map from './pages/Map'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
 import TrackIncident from './pages/TrackIncident'
+import NewsFeed from './pages/NewsFeed'
+import CommunityChatWidget from './components/CommunityChatWidget'
 import { isAuthenticated } from './services/authService'
 
 function ProtectedRoute({ children }) {
@@ -37,6 +39,7 @@ export default function App() {
           <Route path="/report" element={<ReportIncident />} />
           <Route path="/track" element={<TrackIncident />} />
           <Route path="/track/:code" element={<TrackIncident />} />
+          <Route path="/noticias" element={<NewsFeed />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/incidents" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
           <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetail /></ProtectedRoute>} />
@@ -46,6 +49,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         <Footer />
+        <CommunityChatWidget />
       </Router>
     </ToastProvider>
   )
