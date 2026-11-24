@@ -14,7 +14,9 @@ sqllocaldb start MSSQLLocalDB >nul 2>&1
 
 if not exist "frontend\node_modules\" (
     echo [INFO] Instalando dependencias del Frontend...
+    cd frontend
     call npm install
+    cd ..
     echo.
 )
 
@@ -37,7 +39,7 @@ goto MODO_LOCAL
 :MODO_LOCAL
 echo.
 echo [3/4] Iniciando Backend .NET 9 Web API en segundo plano...
-start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http
+start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http > backend_web.log 2>&1
 ping 127.0.0.1 -n 3 >nul
 
 echo [4/4] Abriendo Frontend React en el navegador...
@@ -63,7 +65,7 @@ for /f "tokens=*" %%i in ('powershell -NoProfile -Command "(Invoke-WebRequest -U
 
 echo.
 echo [INFO] Iniciando Backend .NET 9 en segundo plano...
-start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http
+start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http > backend_web.log 2>&1
 
 echo [INFO] Iniciando Frontend React en segundo plano...
 start /b npm run dev

@@ -1,9 +1,11 @@
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { DEV_PC_IP } from '../config'
 
-// En emulador Android, localhost de la máquina anfitriona es 10.0.2.2.
-// En iOS Simulator o Web, es localhost.
-const DEFAULT_HOST = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000'
+// En Web es localhost:5000. En celular físico o emulador se conecta a la IP de la máquina anfitriona.
+const DEFAULT_HOST = Platform.OS === 'web'
+  ? 'http://localhost:5000'
+  : `http://${DEV_PC_IP}:5000`
 const CUSTOM_HOST_KEY = '@barrio_api_host'
 
 let cachedBaseUrl = null
