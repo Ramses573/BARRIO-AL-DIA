@@ -1,0 +1,138 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BarrioAlDia.Api.Data;
+using BarrioAlDia.Api.DTOs;
+using BarrioAlDia.Api.Models;
+
+namespace BarrioAlDia.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class NewsController : ControllerBase
+{
+    private readonly BarrioDbContext _context;
+
+    public NewsController(BarrioDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/news
+    [HttpGet]
+    public async Task<IActionResult> GetNews(
+        [FromQuery] string? canton,
+        [FromQuery] string? category,
+        [FromQuery] bool? urgentOnly)
+    {
+        var query = _context.NewsArticles.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(canton) && canton != "todos")
+        {
+            var cLower = canton.Trim().ToLower();
+            query = query.Where(n => n.Canton.ToLower().Contains(cLower) || n.Canton == "General");
+        }
+
+        if (!string.IsNullOrWhiteSpace(category) && category != "todos")
+        {
+            query = query.Where(n => n.Category == category);
+        }
+
+        if (urgentOnly.HasValue && urgentOnly.Value)
+        {
+            query = query.Where(n => n.IsUrgent);
+        }
+
+        var list = await query
+            .OrderByDescending(n => n.IsUrgent)
+            .ThenByDescending(n => n.PublishedAt)
+            .Select(n => new NewsDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Summary = n.Summary,
+                Content = n.Content,
+                Category = n.Category,
+                Canton = n.Canton,
+                District = n.District,
+                AuthorEntity = n.AuthorEntity,
+                PublishedAt = n.PublishedAt,
+                IsUrgent = n.IsUrgent,
+                ImageUrl = n.ImageUrl,
+                OfficialLink = n.OfficialLink
+            })
+            .ToListAsync();
+
+        return Ok(list);
+    }
+
+    // GET: api/news/{id}
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetNewsById(int id)
+    {
+        var news = await _context.NewsArticles.FindAsync(id);
+        if (news == null)
+        {
+            return NotFound(new { message = $"Noticia con ID {id} no encontrada." });
+        }
+
+        return Ok(new NewsDto
+        {
+            Id = news.Id,
+            Title = news.Title,
+            Summary = news.Summary,
+            Content = news.Content,
+            Category = news.Category,
+            Canton = news.Canton,
+            District = news.District,
+            AuthorEntity = news.AuthorEntity,
+            PublishedAt = news.PublishedAt,
+            IsUrgent = news.IsUrgent,
+            ImageUrl = news.ImageUrl,
+            OfficialLink = news.OfficialLink
+        });
+    }
+
+    // POST: api/news
+    [HttpPost]
+    public async Task<IActionResult> CreateNews([FromBody] CreateNewsDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var article = new NewsArticle
+        {
+            Title = dto.Title.Trim(),
+            Summary = string.IsNullOrWhiteSpace(dto.Summary) ? dto.Title.Trim() : dto.Summary.Trim(),
+            Content = dto.Content.Trim(),
+            Category = dto.Category,
+            Canton = dto.Canton,
+            District = dto.District,
+            AuthorEntity = dto.AuthorEntity,
+            PublishedAt = DateTime.UtcNow,
+            IsUrgent = dto.IsUrgent,
+            ImageUrl = dto.ImageUrl,
+            OfficialLink = dto.OfficialLink
+        };
+
+        _context.NewsArticles.Add(article);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetNewsById), new { id = article.Id }, new NewsDto
+        {
+            Id = article.Id,
+            Title = article.Title,
+            Summary = article.Summary,
+            Content = article.Content,
+            Category = article.Category,
+            Canton = article.Canton,
+            District = article.District,
+            AuthorEntity = article.AuthorEntity,
+            PublishedAt = article.PublishedAt,
+            IsUrgent = article.IsUrgent,
+            ImageUrl = article.ImageUrl,
+            OfficialLink = article.OfficialLink
+        });
+    }
+}

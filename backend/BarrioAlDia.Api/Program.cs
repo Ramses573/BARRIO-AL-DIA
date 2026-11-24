@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using BarrioAlDia.Api.Data;
+using BarrioAlDia.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +12,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<BarrioDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Configuración de Controladores
+// Configuración de Controladores y SignalR en tiempo real
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Configuración de CORS para permitir frontend React Vite (localhost:3000 y red local)
 builder.Services.AddCors(options =>
@@ -66,6 +68,7 @@ var app = builder.Build();
 
 // Pipeline de Middleware
 app.UseCors("AllowFrontend");
+app.UseStaticFiles();
 
 if (app.Environment.IsDevelopment())
 {
@@ -108,6 +111,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.MapHub<ChatHub>("/chatHub");
 app.MapControllers();
 
 app.Run();
