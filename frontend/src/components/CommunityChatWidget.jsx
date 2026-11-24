@@ -60,15 +60,12 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   }, [])
 
   useEffect(() => {
-    if (!isOpen) return
+    let isSubscribed = true
 
-    loadMessages()
-
-    // 1. Polling silencioso en tiempo real cada 800ms
-    const interval = setInterval(async () => {
+    const syncMessages = async () => {
       try {
         const fresh = await getMessagesByTicket(ticketCode)
-        if (Array.isArray(fresh)) {
+        if (isSubscribed && Array.isArray(fresh)) {
           setMessages(prev => {
             const prevSig = prev.map(m => `${m.id}-${m.sentAt}`).join('|')
             const freshSig = fresh.map(m => `${m.id}-${m.sentAt}`).join('|')
@@ -81,9 +78,13 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       } catch {
         // Silencioso
       }
-    }, 800)
+    }
 
-    // 2. Conexión SignalR instantánea
+    // Cargar inmediatamente y mantener sincronización activa cada 800ms
+    syncMessages()
+    const interval = setInterval(syncMessages, 800)
+
+    // Conexión SignalR instantánea
     let connection = null
     try {
       const hubUrl = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
@@ -96,7 +97,7 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
         .build()
 
       connection.on('ReceiveMessage', (msg) => {
-        if (!msg) return
+        if (!isSubscribed || !msg) return
         const cleanMsgCode = (msg.ticketCode || '').replace(/^#/, '').trim().toUpperCase()
         const cleanCurrentCode = (ticketCode || '').replace(/^#/, '').trim().toUpperCase()
 
@@ -116,23 +117,33 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     }
 
     return () => {
+      isSubscribed = false
       clearInterval(interval)
       if (connection) {
         connection.stop()
       }
     }
-  }, [isOpen, ticketCode])
+  }, [ticketCode])
+
+  const handleCloseChat = () => {
+    try {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause()
+      }
+    } catch {
+      // Ignorar
+    }
+    setPlayingId(null)
+    if (isRecording) {
+      cancelRecording()
+    }
+    setIsOpen(false)
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const loadMessages = async () => {
-    const list = await getMessagesByTicket(ticketCode)
-    if (Array.isArray(list)) {
-      setMessages(list)
-    }
-  }
 
   // Envío de mensaje de texto
   const handleSendText = async (e) => {
@@ -280,7 +291,7 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
             <button
               type="button"
               className="btn-close-chat"
-              onClick={() => setIsOpen(false)}
+              onClick={handleCloseChat}
             >
               <X size={16} />
             </button>

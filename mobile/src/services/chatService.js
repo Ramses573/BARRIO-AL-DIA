@@ -67,7 +67,7 @@ export const getMessagesByTicket = async (ticketCode) => {
         senderRole: 'Sistema',
         messageType: 'Text',
         content: `Canal de asistencia cantonal activado para el ticket ${code}. Puedes escribirnos o enviarnos una nota de voz.`,
-        sentAt: new Date().toISOString(),
+        sentAt: '2026-11-24T00:00:00.000Z',
         isRead: true
       }
     ]
@@ -96,16 +96,25 @@ export const sendChatMessage = async (msgData) => {
   const updated = [...current, newMsg]
   await AsyncStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(updated))
 
-  // Enviar a la API .NET 9 en background
+  // Enviar a la API .NET 9 con reintento automático
+  const payload = {
+    ticketCode: newMsg.ticketCode,
+    senderName: newMsg.senderName,
+    senderRole: newMsg.senderRole,
+    messageType: newMsg.messageType,
+    content: newMsg.content,
+    audioDurationSeconds: newMsg.audioDurationSeconds
+  }
+
   try {
-    await apiPost('/chat/send', {
-      ticketCode: newMsg.ticketCode,
-      senderName: newMsg.senderName,
-      senderRole: newMsg.senderRole,
-      messageType: newMsg.messageType,
-      content: newMsg.content,
-      audioDurationSeconds: newMsg.audioDurationSeconds
-    })
+    let apiResult = await apiPost('/chat/send', payload)
+    if (!apiResult) {
+      await new Promise(r => setTimeout(r, 500))
+      apiResult = await apiPost('/chat/send', payload)
+    }
+    if (apiResult && apiResult.id) {
+      return apiResult
+    }
   } catch {
     // Se mantiene en caché local
   }

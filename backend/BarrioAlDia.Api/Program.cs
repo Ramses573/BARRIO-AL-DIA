@@ -111,7 +111,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapHub<ChatHub>("/chatHub");
-app.MapControllers();
+app.MapHub<ChatHub>("/chatHub").RequireCors("AllowFrontend");
+app.MapControllers().RequireCors("AllowFrontend");
 
 app.Run();

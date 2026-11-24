@@ -9,7 +9,7 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/3] Verificando base de datos SQL Server (LocalDB)...
+echo [1/4] Verificando base de datos SQL Server (LocalDB)...
 sqllocaldb start MSSQLLocalDB >nul 2>&1
 
 if not exist "frontend\node_modules\" (
@@ -20,20 +20,23 @@ if not exist "frontend\node_modules\" (
     echo.
 )
 
-echo [2/3] Liberando puertos 3000 y 5000 si estuvieran ocupados...
+echo [2/4] Liberando puertos 3000 y 5000 si estuvieran ocupados...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { taskkill /F /T /PID $_.OwningProcess >$null 2>&1 } }" >nul 2>&1
 
-echo [3/3] Iniciando Backend .NET 9 API (Puerto 5000)...
-start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http > backend.log 2>&1
-ping 127.0.0.1 -n 4 >nul
+echo [3/4] Iniciando Backend .NET 9 API (Puerto 5000)...
+start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll > backend.log 2>&1
 
+echo [INFO] Esperando a que el backend inicialice la base de datos...
+powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
+
+echo [4/4] Abriendo Frontend React en el navegador...
 start http://localhost:3000
 
 echo.
 echo ========================================================
 echo  [SISTEMA EN EJECUCION]
-echo  - Frontend Web:   http://localhost:3000
 echo  - Backend API:    http://localhost:5000/swagger
+echo  - Frontend Web:   http://localhost:3000
 echo  -------------------------------------------------------
 echo  Para detener todo: presiona Ctrl+C en esta ventana.
 echo ========================================================

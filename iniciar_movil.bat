@@ -23,10 +23,11 @@ sqllocaldb start MSSQLLocalDB >nul 2>&1
 netstat -aon | findstr :5000 | findstr LISTENING >nul
 if errorlevel 1 (
     echo [INFO] Iniciando Backend en segundo plano...
-    start /b dotnet run --project backend\BarrioAlDia.Api --launch-profile http > backend_mobile.log 2>&1
-    ping 127.0.0.1 -n 4 >nul
+    start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll > backend_mobile.log 2>&1
+    echo [INFO] Esperando a que el backend inicialice la base de datos...
+    powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
 ) else (
-    echo [OK] Backend API ya esta activo en el puerto 5000.
+    echo [OK] Backend API ya esta activo y escuchando en el puerto 5000.
 )
 
 :: Liberar puerto 8081 de Metro si estuviera retenido

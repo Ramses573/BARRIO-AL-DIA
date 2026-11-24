@@ -55,11 +55,13 @@ export const getMessagesByTicket = async (ticketCode) => {
     })
     if (res.ok) {
       const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+      if (Array.isArray(data)) {
+        if (data.length > 0 || !INITIAL_DEMO_MESSAGES[code]) {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+          }
+          return data
         }
-        return data
       }
     }
   } catch {
@@ -80,13 +82,13 @@ export const getMessagesByTicket = async (ticketCode) => {
 
   return INITIAL_DEMO_MESSAGES[code] || [
     {
-      id: Date.now(),
+      id: 1000,
       ticketCode: code,
       senderName: 'Sistema Municipal',
       senderRole: 'Soporte Municipal',
       messageType: 'Text',
       content: `Canal de asistencia activado para el ticket ${code}. Podés escribirnos o enviarnos una nota de voz si necesitás indicar referencias adicionales.`,
-      sentAt: new Date().toISOString(),
+      sentAt: '2026-11-24T00:00:00.000Z',
       isRead: true
     }
   ]
@@ -106,16 +108,24 @@ export const sendChatMessage = async ({ ticketCode, senderName, senderRole, mess
   let createdMessage = null
 
   try {
-    const res = await fetch(`${API_BASE}/chat/send`, {
+    let res = await fetch(`${API_BASE}/chat/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
+    if (!res.ok) {
+      await new Promise(r => setTimeout(r, 500))
+      res = await fetch(`${API_BASE}/chat/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    }
     if (res.ok) {
       createdMessage = await res.json()
     }
   } catch {
-    // Modo offline
+    // Si falla el reintento queda offline
   }
 
   if (!createdMessage) {
