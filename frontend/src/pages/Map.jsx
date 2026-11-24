@@ -148,41 +148,44 @@ export default function Map() {
     // Click sobre el mapa para reportar incidente con coordenadas exactas
     map.on('click', (e) => {
       const { lat, lng } = e.latlng
-      const popupContent = document.createElement('div')
-      popupContent.innerHTML = `
-        <div style="font-family: inherit; padding: 4px;">
-          <strong style="color: #0284c7; font-size: 13px;">📍 Punto Seleccionado</strong>
-          <p style="margin: 4px 0 8px; font-size: 12px; color: #475569;">
-            Lat: ${lat.toFixed(5)}<br/>Lng: ${lng.toFixed(5)}
-          </p>
-          <button id="btn-report-here" style="
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 700;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-          ">
-            Reportar aquí
-          </button>
-        </div>
+      const popupContainer = document.createElement('div')
+      popupContainer.style.fontFamily = 'inherit'
+      popupContainer.style.padding = '4px'
+      popupContainer.innerHTML = `
+        <strong style="color: #0284c7; font-size: 13px; display: block; margin-bottom: 3px;">📍 Punto Seleccionado</strong>
+        <p style="margin: 3px 0 8px; font-size: 12px; color: #475569;">
+          Coordenadas: <strong>${lat.toFixed(5)}, ${lng.toFixed(5)}</strong>
+        </p>
+        <button class="btn-report-popup-action" style="
+          background-color: #0284c7;
+          color: white;
+          border: none;
+          padding: 8px 14px;
+          font-size: 12px;
+          font-weight: 700;
+          border-radius: 6px;
+          cursor: pointer;
+          width: 100%;
+          box-shadow: 0 2px 4px rgba(2,132,199,0.3);
+        ">
+          ➕ Reportar Incidencia Aquí
+        </button>
       `
-      L.popup()
-        .setLatLng(e.latlng)
-        .setContent(popupContent)
-        .openOn(map)
 
-      setTimeout(() => {
-        const btn = document.getElementById('btn-report-here')
-        if (btn) {
-          btn.onclick = () => {
-            navigate(`/report?lat=${lat.toFixed(5)}&lng=${lng.toFixed(5)}`)
-          }
-        }
-      }, 50)
+      const btn = popupContainer.querySelector('.btn-report-popup-action')
+      if (btn) {
+        L.DomEvent.disableClickPropagation(btn)
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault()
+          ev.stopPropagation()
+          navigate(`/report?lat=${lat.toFixed(5)}&lng=${lng.toFixed(5)}`)
+        })
+      }
+
+      L.popup({ autoClose: true, closeOnClick: true })
+        .setLatLng(e.latlng)
+        .setContent(popupContainer)
+        .openOn(map)
     })
 
     return () => {
@@ -439,9 +442,20 @@ export default function Map() {
                 </>
               )}
             </button>
-            <Link to="/report" className="btn-real-map-report">
-              <PlusCircle size={14} className="inline-icon" /> Reportar en el Mapa
-            </Link>
+            <button
+              type="button"
+              className="btn-real-map-report"
+              onClick={() => {
+                if (mapInstanceRef.current) {
+                  const center = mapInstanceRef.current.getCenter()
+                  navigate(`/report?lat=${center.lat.toFixed(5)}&lng=${center.lng.toFixed(5)}`)
+                } else {
+                  navigate('/report')
+                }
+              }}
+            >
+              <PlusCircle size={14} className="inline-icon" /> Reportar en este Punto
+            </button>
           </div>
         </div>
 

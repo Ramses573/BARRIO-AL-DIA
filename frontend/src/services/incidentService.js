@@ -122,8 +122,15 @@ export const addIncident = (newIncident) => {
   const defaultLng = -83.9194 + (Math.random() - 0.5) * 0.02
 
   const loc = (newIncident.location || '').toLowerCase()
-  const cantonPrefix = loc.includes('turrialba') ? 'TURR' :
-                       (loc.includes('tarrazu') || loc.includes('tarrazú')) ? 'TARZ' : 'CART'
+  const latNum = Number(newIncident.lat) || 0
+  const lngNum = Number(newIncident.lng) || 0
+
+  let cantonPrefix = 'CART'
+  if (loc.includes('turrialba') || (lngNum > -83.85 && latNum > 9.8)) {
+    cantonPrefix = 'TURR'
+  } else if (loc.includes('tarrazu') || loc.includes('tarrazú') || (latNum < 9.75 && lngNum < -83.95)) {
+    cantonPrefix = 'TARZ'
+  }
   const randomSuffix = Math.floor(1000 + Math.random() * 9000)
   const ticketCode = newIncident.ticketCode || `TKT-${cantonPrefix}-${randomSuffix}`
 

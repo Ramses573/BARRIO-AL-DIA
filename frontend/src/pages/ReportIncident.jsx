@@ -82,6 +82,31 @@ export default function ReportIncident() {
     { id: 'Alta', label: 'Alta (Crítica/Riesgo)', desc: 'Riesgo humano o bloqueo total de ruta', color: '#ef4444' }
   ]
 
+  // Sincronizar coordenadas cuando vienen desde el mapa
+  useEffect(() => {
+    if (queryLat && queryLng) {
+      const latNum = parseFloat(queryLat)
+      const lngNum = parseFloat(queryLng)
+      if (!isNaN(latNum) && !isNaN(lngNum)) {
+        let cantonName = 'Cartago'
+        if (lngNum > -83.85 && latNum > 9.8) {
+          cantonName = 'Turrialba'
+        } else if (latNum < 9.75 && lngNum < -83.95) {
+          cantonName = 'Tarrazú'
+        }
+
+        const formattedLoc = `Punto en ${cantonName} (${latNum.toFixed(4)}, ${lngNum.toFixed(4)})`
+        setForm(prev => ({
+          ...prev,
+          lat: queryLat,
+          lng: queryLng,
+          location: formattedLoc
+        }))
+        setHasDraftNotice(false)
+      }
+    }
+  }, [queryLat, queryLng])
+
   // Detectar y consultar borrador previo guardado
   useEffect(() => {
     // Si viene con coordenadas directas desde el mapa, respetar el punto
