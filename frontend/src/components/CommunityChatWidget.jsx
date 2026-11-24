@@ -11,10 +11,13 @@ import {
   ShieldCheck,
   User,
   Wrench,
-  Radio
+  Radio,
+  Layers,
+  ChevronDown
 } from 'lucide-react'
 import { getMessagesByTicket, sendChatMessage } from '../services/chatService'
 import { isAuthenticated, getCurrentOfficial } from '../services/authService'
+import { getAllTrackableTickets, fetchIncidentsFromApi } from '../services/incidentService'
 import { useToast } from './Toast'
 import './CommunityChatWidget.css'
 
@@ -27,8 +30,9 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   const [ticketCode, setTicketCode] = useState(defaultTicketCode)
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
+  const [allTickets, setAllTickets] = useState([])
   const senderRole = isAuth ? 'Cuadrilla Municipal' : 'Ciudadano'
-  const senderName = isAuth ? (currentOfficial?.fullName || 'Funcionario') : 'Vecino Comunitario'
+  const senderName = isAuth ? (currentOfficial?.fullName || 'Funcionario') : 'Ramsés Solano Calvo'
 
   // Estados de grabación de audio
   const [isRecording, setIsRecording] = useState(false)
@@ -42,6 +46,17 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   const audioPlayerRef = useRef(new Audio())
 
   const messagesEndRef = useRef(null)
+
+  useEffect(() => {
+    // Cargar tickets para el combo box
+    const initial = getAllTrackableTickets()
+    setAllTickets(initial)
+    fetchIncidentsFromApi().then(apiList => {
+      if (Array.isArray(apiList) && apiList.length) {
+        setAllTickets(getAllTrackableTickets())
+      }
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -212,18 +227,35 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
             </button>
           </div>
 
-          {/* Selector de Canal / Ticket */}
-          <div className="chat-channel-selector">
-            <input
-              type="text"
-              value={ticketCode}
-              onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
-              placeholder="Código de ticket (ej. TKT-CART-5821 o GENERAL)"
-              className="chat-ticket-input"
-            />
-            <button type="button" className="btn-switch-ticket" onClick={loadMessages}>
-              Conectar
-            </button>
+          {/* ComboBox Selector de Canales y Tickets (Sin entradas manuales) */}
+          <div className="chat-combobox-bar">
+            <div className="chat-combobox-inner">
+              <Radio size={14} className="text-blue flex-shrink-0" />
+              <select
+                id="chat-channel-combobox"
+                className="chat-combobox-select"
+                value={ticketCode}
+                onChange={(e) => setTicketCode(e.target.value)}
+              >
+                <optgroup label="📡 Canales de Comunicación Directa">
+                  <option value="GENERAL">📢 Canal General de la Comunidad</option>
+                  <option value="EMERGENCIA-CARTAGO">🚨 Mesa de Emergencias Cartago</option>
+                  <option value="EMERGENCIA-TURRIALBA">🚨 Coordinación Operativa Turrialba</option>
+                  <option value="EMERGENCIA-TARRAZU">🚨 Brigada Cantonal Tarrazú</option>
+                </optgroup>
+                <optgroup label="🎫 Tickets de Incidentes Comunitarios">
+                  {allTickets.map(t => {
+                    const code = t.ticketCode || `#${t.id}`
+                    const rep = t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')
+                    return (
+                      <option key={code} value={code}>
+                        {code} — {t.title} [{rep}]
+                      </option>
+                    )
+                  })}
+                </optgroup>
+              </select>
+            </div>
           </div>
 
           {/* Historial de Mensajes */}

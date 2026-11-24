@@ -19,7 +19,7 @@ import {
   ChevronRight,
   User
 } from 'lucide-react'
-import { getAllTrackableTickets, getIncidentByTicketCode } from '../services/incidentService'
+import { getAllTrackableTickets, getIncidentByTicketCode, fetchIncidentsFromApi } from '../services/incidentService'
 import { useToast } from '../components/Toast'
 import './TrackIncident.css'
 
@@ -28,21 +28,36 @@ export default function TrackIncident() {
   const { code: paramCode } = useParams()
   const { addToast } = useToast()
 
-  const allTickets = getAllTrackableTickets()
-  const initialCode = paramCode || searchParams.get('code') || (allTickets[0] ? (allTickets[0].ticketCode || String(allTickets[0].id)) : '')
+  const [ticketsList, setTicketsList] = useState(getAllTrackableTickets())
+  const initialCode = paramCode || searchParams.get('code') || (ticketsList[0] ? (ticketsList[0].ticketCode || String(ticketsList[0].id)) : '')
   const [ticketInput, setTicketInput] = useState(initialCode)
   const [ticketData, setTicketData] = useState(null)
   const [hasSearched, setHasSearched] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
+  // Sincronizar tickets desde la API de .NET 9
+  useEffect(() => {
+    fetchIncidentsFromApi().then(apiData => {
+      if (Array.isArray(apiData) && apiData.length) {
+        const full = getAllTrackableTickets()
+        setTicketsList(full)
+        if (!ticketInput && full[0]) {
+          const firstCode = full[0].ticketCode || String(full[0].id)
+          setTicketInput(firstCode)
+          handleSearch(firstCode)
+        }
+      }
+    }).catch(() => {})
+  }, [])
+
   // Auto-cargar ticket inicial
   useEffect(() => {
-    const code = initialCode || (allTickets[0] ? (allTickets[0].ticketCode || String(allTickets[0].id)) : '')
+    const code = initialCode || (ticketsList[0] ? (ticketsList[0].ticketCode || String(ticketsList[0].id)) : '')
     if (code) {
       setTicketInput(code)
       handleSearch(code)
     }
-  }, [initialCode])
+  }, [initialCode, ticketsList])
 
   const handleSearch = (codeToSearch) => {
     const query = (codeToSearch || ticketInput).trim()
@@ -105,7 +120,7 @@ export default function TrackIncident() {
                 }}
               >
                 <option value="">-- Elige un ticket para consultar su seguimiento --</option>
-                {allTickets.map(t => {
+                {ticketsList.map(t => {
                   const code = t.ticketCode || `#${t.id}`
                   const reporter = t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')
                   return (
@@ -120,7 +135,7 @@ export default function TrackIncident() {
             {/* Chips de acceso rápido */}
             <div className="track-sample-chips">
               <span>Accesos directos:</span>
-              {allTickets.slice(0, 4).map(t => {
+              {ticketsList.slice(0, 4).map(t => {
                 const code = t.ticketCode || `#${t.id}`
                 return (
                   <button

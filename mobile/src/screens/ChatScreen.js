@@ -9,19 +9,32 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
   ActivityIndicator
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Audio } from 'expo-av'
 import { colors, shadows } from '../theme/colors'
 import { getMessagesByTicket, sendChatMessage } from '../services/chatService'
+import { getAllTrackableTickets } from '../services/incidentService'
+import { getCurrentUser } from '../services/authService'
+
+const DIRECT_CHANNELS = [
+  { code: 'GENERAL', title: '📢 Canal General Comunitario', subtitle: 'Avisos vecinales y coordinación abierta', icon: 'megaphone' },
+  { code: 'EMERGENCIA-CARTAGO', title: '🚨 Despacho Emergencias Cartago', subtitle: 'Cuadrillas municipales y protección civil', icon: 'warning' },
+  { code: 'EMERGENCIA-TURRIALBA', title: '🚨 Coordinación Operativa Turrialba', subtitle: 'Unidad de obras públicas y vialidad', icon: 'warning' },
+  { code: 'EMERGENCIA-TARRAZU', title: '🚨 Brigada Cantonal Tarrazú', subtitle: 'Servicios públicos y tendido eléctrico', icon: 'warning' }
+]
 
 export default function ChatScreen({ route }) {
-  const initialTicket = route?.params?.ticketCode || 'TKT-CART-5821'
+  const initialTicket = route?.params?.ticketCode || 'GENERAL'
   const [ticketCode, setTicketCode] = useState(initialTicket)
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [loading, setLoading] = useState(true)
+  const [allTickets, setAllTickets] = useState([])
+  const [showPicker, setShowPicker] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
 
   // Estados de grabación de audio con expo-av
   const [recording, setRecording] = useState(null)
@@ -36,12 +49,27 @@ export default function ChatScreen({ route }) {
   const scrollViewRef = useRef(null)
 
   useEffect(() => {
+    loadTicketsAndUser()
+  }, [])
+
+  useEffect(() => {
     loadChat()
     return () => {
       if (sound) sound.unloadAsync()
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [ticketCode])
+
+  const loadTicketsAndUser = async () => {
+    try {
+      const tickets = await getAllTrackableTickets()
+      setAllTickets(tickets)
+      const user = await getCurrentUser()
+      if (user) setCurrentUser(user)
+    } catch {
+      // Ignorar
+    }
+  }
 
   const loadChat = async () => {
     setLoading(true)
@@ -61,9 +89,11 @@ export default function ChatScreen({ route }) {
     const text = inputText.trim()
     setInputText('')
 
+    const citizenName = currentUser?.fullName || 'Ramsés Solano Calvo'
+
     const sent = await sendChatMessage({
       ticketCode,
-      senderName: 'Vecino Comunitario',
+      senderName: citizenName,
       senderRole: 'Ciudadano',
       messageType: 'Text',
       content: text
@@ -116,9 +146,11 @@ export default function ChatScreen({ route }) {
       const duration = recordingSeconds || 1
       setRecording(null)
 
+      const citizenName = currentUser?.fullName || 'Ramsés Solano Calvo'
+
       const sent = await sendChatMessage({
         ticketCode,
-        senderName: 'Vecino Comunitario',
+        senderName: citizenName,
         senderRole: 'Ciudadano',
         messageType: 'Audio',
         content: uri,
@@ -169,28 +201,120 @@ export default function ChatScreen({ route }) {
     }
   }
 
+  const selectedChannel = DIRECT_CHANNELS.find(c => c.code === ticketCode)
+  const selectedTicket = allTickets.find(t => (t.ticketCode || String(t.id)).toUpperCase() === ticketCode.toUpperCase())
+  const selectedTitle = selectedChannel ? selectedChannel.title : (selectedTicket ? `${selectedTicket.title} (${selectedTicket.status})` : 'Canal Comunitario')
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {/* Selector de Ticket Superior */}
-      <View style={styles.topTicketSelector}>
-        <Text style={styles.topTicketLabel}>Canal vinculado al ticket:</Text>
-        <View style={styles.ticketInputRow}>
-          <Ionicons name="pricetag" size={14} color={colors.primary} />
-          <TextInput
-            style={styles.ticketCodeInput}
-            value={ticketCode}
-            onChangeText={setTicketCode}
-            autoCapitalize="characters"
-          />
-          <TouchableOpacity style={styles.btnSwitchTicket} onPress={loadChat}>
-            <Text style={styles.btnSwitchTicketText}>Cambiar</Text>
-          </TouchableOpacity>
-        </View>
+      {/* ComboBox Selector de Canal o Ticket Cantonal (Sin input manual) */}
+      <View style={styles.topComboboxBar}>
+        <Text style={styles.topComboboxLabel}>Canal / Ticket Seleccionado (ComboBox):</Text>
+        <TouchableOpacity
+          style={styles.comboboxTriggerBtn}
+          onPress={() => setShowPicker(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.comboboxTriggerContent}>
+            <Ionicons
+              name={selectedChannel ? selectedChannel.icon : 'pricetag'}
+              size={18}
+              color={colors.primary}
+            />
+            <View style={{ flex: 1, marginLeft: 8 }}>
+              <Text style={styles.comboboxSelectedCode}>{ticketCode}</Text>
+              <Text style={styles.comboboxSelectedSub} numberOfLines={1}>{selectedTitle}</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-down-circle" size={20} color={colors.primary} />
+        </TouchableOpacity>
       </View>
+
+      {/* Modal Picker tipo ComboBox */}
+      <Modal
+        visible={showPicker}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Seleccionar Canal o Ticket</Text>
+                <Text style={styles.modalSubtitle}>Elige un canal o ticket del ComboBox sin escribir</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowPicker(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalScroll}>
+              <Text style={styles.modalSectionTitle}>📡 Canales de Comunicación Directa</Text>
+              {DIRECT_CHANNELS.map(ch => {
+                const isSelected = ticketCode === ch.code
+                return (
+                  <TouchableOpacity
+                    key={ch.code}
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => {
+                      setTicketCode(ch.code)
+                      setShowPicker(false)
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.modalItemAvatar, isSelected && { backgroundColor: colors.primary }]}>
+                      <Ionicons name={ch.icon} size={18} color={isSelected ? '#ffffff' : colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalItemCode, isSelected && { color: colors.primary }]}>
+                        {ch.code}
+                      </Text>
+                      <Text style={styles.modalItemTitle}>{ch.title}</Text>
+                      <Text style={styles.modalItemSub}>{ch.subtitle}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+                  </TouchableOpacity>
+                )
+              })}
+
+              <Text style={[styles.modalSectionTitle, { marginTop: 14 }]}>🎫 Tickets de Incidentes Comunitarios</Text>
+              {allTickets.map(t => {
+                const code = t.ticketCode || `#${t.id}`
+                const isSelected = ticketCode.toUpperCase() === code.toUpperCase()
+                const rep = t.isAnonymous ? 'Anónimo Protegido' : (t.reporterName || 'Ramsés Solano')
+                return (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => {
+                      setTicketCode(code)
+                      setShowPicker(false)
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.modalItemAvatar, isSelected && { backgroundColor: colors.primary }]}>
+                      <Ionicons name="pricetag" size={18} color={isSelected ? '#ffffff' : colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalItemCode, isSelected && { color: colors.primary }]}>
+                        {code}
+                      </Text>
+                      <Text style={styles.modalItemTitle} numberOfLines={1}>{t.title}</Text>
+                      <Text style={styles.modalItemSub}>Reportado por: {rep} • {t.status}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Listado de Mensajes */}
       {loading ? (
@@ -317,44 +441,128 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f1f5f9',
   },
-  topTicketSelector: {
+  topComboboxBar: {
     backgroundColor: '#ffffff',
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
+    paddingVertical: 10,
+    borderBottomWidth: 1.5,
     borderBottomColor: colors.border,
+    ...shadows.sm,
   },
-  topTicketLabel: {
+  topComboboxLabel: {
     fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-    marginBottom: 4,
+    color: '#64748b',
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
   },
-  ticketInputRow: {
+  comboboxTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  ticketCodeInput: {
+  comboboxTriggerContent: {
     flex: 1,
-    backgroundColor: colors.bgSubtle,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  comboboxSelectedCode: {
     fontSize: 13,
     fontWeight: '800',
     color: colors.primary,
   },
-  btnSwitchTicket: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
+  comboboxSelectedSub: {
+    fontSize: 11.5,
+    color: '#475569',
+    fontWeight: '600',
+    marginTop: 1,
   },
-  btnSwitchTicketText: {
-    color: '#ffffff',
-    fontSize: 11,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '82%',
+    ...shadows.md,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontSize: 16.5,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  modalSubtitle: {
+    fontSize: 11.5,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    padding: 6,
+  },
+  modalScroll: {
+    maxHeight: 380,
+  },
+  modalSectionTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: colors.primary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+    gap: 10,
+    backgroundColor: '#f8fafc',
+  },
+  modalItemSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '0a',
+  },
+  modalItemAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalItemCode: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  modalItemTitle: {
+    fontSize: 12.5,
     fontWeight: '700',
+    color: '#334155',
+    marginTop: 1,
+  },
+  modalItemSub: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 1,
   },
   centerBox: {
     flex: 1,
