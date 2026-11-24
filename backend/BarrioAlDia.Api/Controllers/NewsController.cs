@@ -58,7 +58,9 @@ public class NewsController : ControllerBase
                 PublishedAt = n.PublishedAt,
                 IsUrgent = n.IsUrgent,
                 ImageUrl = n.ImageUrl,
-                OfficialLink = n.OfficialLink
+                OfficialLink = n.OfficialLink,
+                Lat = n.Lat,
+                Lng = n.Lng
             })
             .ToListAsync();
 
@@ -88,7 +90,9 @@ public class NewsController : ControllerBase
             PublishedAt = news.PublishedAt,
             IsUrgent = news.IsUrgent,
             ImageUrl = news.ImageUrl,
-            OfficialLink = news.OfficialLink
+            OfficialLink = news.OfficialLink,
+            Lat = news.Lat,
+            Lng = news.Lng
         });
     }
 
@@ -113,7 +117,9 @@ public class NewsController : ControllerBase
             PublishedAt = DateTime.UtcNow,
             IsUrgent = dto.IsUrgent,
             ImageUrl = dto.ImageUrl,
-            OfficialLink = dto.OfficialLink
+            OfficialLink = dto.OfficialLink,
+            Lat = dto.Lat,
+            Lng = dto.Lng
         };
 
         _context.NewsArticles.Add(article);
@@ -132,7 +138,9 @@ public class NewsController : ControllerBase
             PublishedAt = article.PublishedAt,
             IsUrgent = article.IsUrgent,
             ImageUrl = article.ImageUrl,
-            OfficialLink = article.OfficialLink
+            OfficialLink = article.OfficialLink,
+            Lat = article.Lat,
+            Lng = article.Lng
         });
     }
 }

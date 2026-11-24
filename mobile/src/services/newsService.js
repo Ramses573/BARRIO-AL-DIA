@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { apiGet } from './api'
 
-const NEWS_STORAGE_KEY = '@barrio_cantonal_news_v2'
+const NEWS_STORAGE_KEY = '@barrio_cantonal_news_v3'
 
 export const INITIAL_NEWS = [
   {

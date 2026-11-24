@@ -7,7 +7,7 @@ const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && impor
   ? import.meta.env.VITE_API_URL
   : 'http://localhost:5000/api'
 
-const STORAGE_KEY = 'barrio_cantonal_news_v2'
+const STORAGE_KEY = 'barrio_cantonal_news_v3'
 
 export const INITIAL_NEWS = [
   {
@@ -69,6 +69,8 @@ export const INITIAL_NEWS = [
 export const getNews = () => {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
+      window.localStorage.removeItem('barrio_cantonal_news')
+      window.localStorage.removeItem('barrio_cantonal_news_v2')
       const stored = window.localStorage.getItem(STORAGE_KEY)
       if (stored) {
         return JSON.parse(stored)

@@ -43,4 +43,7 @@ public class NewsArticle
 
     [MaxLength(300)]
     public string? OfficialLink { get; set; }
+
+    public double? Lat { get; set; }
+    public double? Lng { get; set; }
 }
