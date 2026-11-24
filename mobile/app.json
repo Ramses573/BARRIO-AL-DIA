@@ -48,7 +48,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Permite fijar las coordenadas GPS de la incidencia."
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }
