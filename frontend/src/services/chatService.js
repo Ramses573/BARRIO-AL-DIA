@@ -52,10 +52,12 @@ export const getMessagesByTicket = async (ticketCode) => {
     const res = await fetch(`${API_BASE}/chat/ticket/${encodeURIComponent(code)}`)
     if (res.ok) {
       const data = await res.json()
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+      if (Array.isArray(data) && data.length > 0) {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+        }
+        return data
       }
-      return data
     }
   } catch {
     // Modo offline
