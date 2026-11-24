@@ -418,6 +418,14 @@ export default function ReportIncident() {
                 Reportar otro incidente
               </button>
 
+              <button
+                type="button"
+                className="btn-success-track"
+                onClick={() => navigate(`/track?code=${createdTicket.ticketCode || createdTicket.id}`)}
+              >
+                Consultar Estado de este Ticket
+              </button>
+
               {isAuthenticated() ? (
                 <button
                   type="button"

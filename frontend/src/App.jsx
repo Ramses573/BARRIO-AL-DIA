@@ -11,6 +11,7 @@ import Notifications from './pages/Notifications'
 import Map from './pages/Map'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
+import TrackIncident from './pages/TrackIncident'
 import { isAuthenticated } from './services/authService'
 
 function ProtectedRoute({ children }) {
@@ -32,6 +33,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/report" element={<ReportIncident />} />
+          <Route path="/track" element={<TrackIncident />} />
+          <Route path="/track/:code" element={<TrackIncident />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/incidents" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
           <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetail /></ProtectedRoute>} />

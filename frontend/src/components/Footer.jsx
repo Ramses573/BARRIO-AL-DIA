@@ -72,6 +72,7 @@ export default function Footer() {
             <li><Link to="/">Inicio y Estadísticas</Link></li>
             <li><Link to="/map">Mapa Cantonal en Tiempo Real</Link></li>
             <li><Link to="/report">Portal de Reporte Ciudadano</Link></li>
+            <li><Link to="/track">Seguimiento de Ticket por Código</Link></li>
             <li><Link to="/incidents">Listado de Incidencias Públicas</Link></li>
             <li><Link to="/admin">Consola de Gestión Municipal</Link></li>
           </ul>

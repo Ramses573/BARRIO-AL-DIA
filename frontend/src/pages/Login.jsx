@@ -12,7 +12,8 @@ import {
   UserPlus,
   Mail,
   Briefcase,
-  PlusCircle
+  PlusCircle,
+  Search
 } from 'lucide-react'
 import { login, register, isAuthenticated, DEFAULT_OFFICIALS } from '../services/authService'
 import { useToast } from '../components/Toast'
@@ -336,9 +337,14 @@ export default function Login() {
               Reportá huecos en la calle, postes sin luz, fugas de agua o emergencias de inmediato sin crear una cuenta.
             </p>
           </div>
-          <Link to="/report" className="btn-citizen-direct-report">
-            <PlusCircle size={15} /> Reportar Incidente Comunitario
-          </Link>
+          <div className="citizen-card-actions">
+            <Link to="/report" className="btn-citizen-direct-report">
+              <PlusCircle size={15} /> Reportar Incidente Comunitario
+            </Link>
+            <Link to="/track" className="btn-citizen-direct-track">
+              <Search size={15} /> Consultar Estado de Ticket
+            </Link>
+          </div>
         </div>
 
         {/* Pie informativo */}

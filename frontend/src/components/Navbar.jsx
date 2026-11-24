@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings } from 'lucide-react'
+import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search } from 'lucide-react'
 import { THEMES, getCurrentTheme, applyTheme } from '../services/themeService'
 import { isAuthenticated, getCurrentOfficial, logout } from '../services/authService'
 import ProfileModal from './ProfileModal'
@@ -119,7 +119,10 @@ export default function Navbar() {
           ) : (
             <div className="navbar-public-actions">
               <Link to="/report" className="btn-navbar-citizen-report">
-                <PlusCircle size={14} className="nav-icon" /> Reporte Comunitario
+                <PlusCircle size={14} className="nav-icon" /> Reportar
+              </Link>
+              <Link to="/track" className="btn-navbar-citizen-track">
+                <Search size={14} className="nav-icon" /> Consultar Ticket
               </Link>
               <Link to="/login" className="navbar-locked-pill" title="Ingreso exclusivo para funcionarios municipales">
                 <Lock size={13} className="text-amber" />
