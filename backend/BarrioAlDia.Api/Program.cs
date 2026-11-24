@@ -4,6 +4,7 @@ using BarrioAlDia.Api.Data;
 using BarrioAlDia.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 // Configuración de Base de Datos SQL Server con Entity Framework Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
