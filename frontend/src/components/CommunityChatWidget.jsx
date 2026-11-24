@@ -293,11 +293,11 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
                   <option value="EMERGENCIA-TARRAZU">🚨 Brigada Cantonal Tarrazú</option>
                 </optgroup>
                 <optgroup label="🎫 Tickets de Incidentes Comunitarios">
-                  {allTickets.map(t => {
-                    const code = t.ticketCode || `#${t.id}`
+                  {allTickets.map((t, idx) => {
+                    const code = t.ticketCode || `#${t.id || idx}`
                     const rep = t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')
                     return (
-                      <option key={code} value={code}>
+                      <option key={`chat-opt-${code}-${t.id || idx}`} value={code}>
                         {code} — {t.title} [{rep}]
                       </option>
                     )
@@ -309,11 +309,11 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
 
           {/* Historial de Mensajes */}
           <div className="chat-messages-container">
-            {messages.map((msg) => {
+            {messages.map((msg, idx) => {
               const isMine = (msg.senderRole === 'Ciudadano' && !isAuth) || (msg.senderRole !== 'Ciudadano' && isAuth)
               return (
                 <div
-                  key={msg.id}
+                  key={`msg-${msg.id || 'm'}-${msg.sentAt || ''}-${idx}`}
                   className={`chat-bubble-wrapper ${isMine ? 'mine' : 'theirs'}`}
                 >
                   <div className="chat-bubble-meta">

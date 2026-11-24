@@ -263,9 +263,9 @@ export default function ChatScreen({ route }) {
           style={styles.chatChipsRow}
           contentContainerStyle={{ gap: 6, paddingVertical: 4 }}
         >
-          {DIRECT_CHANNELS.map(ch => (
+          {DIRECT_CHANNELS.map((ch, idx) => (
             <TouchableOpacity
-              key={ch.code}
+              key={`chat-chip-dir-${ch.code}-${idx}`}
               style={[styles.chatChipBtn, ticketCode === ch.code && styles.chatChipBtnActive]}
               onPress={() => setTicketCode(ch.code)}
             >
@@ -274,11 +274,11 @@ export default function ChatScreen({ route }) {
               </Text>
             </TouchableOpacity>
           ))}
-          {allTickets.slice(0, 3).map(t => {
-            const code = t.ticketCode || `#${t.id}`
+          {allTickets.slice(0, 3).map((t, idx) => {
+            const code = t.ticketCode || `#${t.id || idx}`
             return (
               <TouchableOpacity
-                key={code}
+                key={`chat-chip-tkt-${code}-${idx}`}
                 style={[styles.chatChipBtn, ticketCode.toUpperCase() === code.toUpperCase() && styles.chatChipBtnActive]}
                 onPress={() => setTicketCode(code)}
               >
@@ -312,11 +312,11 @@ export default function ChatScreen({ route }) {
 
             <ScrollView style={styles.modalScroll}>
               <Text style={styles.modalSectionTitle}>📡 Canales de Comunicación Directa</Text>
-              {DIRECT_CHANNELS.map(ch => {
+              {DIRECT_CHANNELS.map((ch, idx) => {
                 const isSelected = ticketCode === ch.code
                 return (
                   <TouchableOpacity
-                    key={ch.code}
+                    key={`modal-ch-${ch.code}-${idx}`}
                     style={[styles.modalItem, isSelected && styles.modalItemSelected]}
                     onPress={() => {
                       setTicketCode(ch.code)
@@ -340,13 +340,13 @@ export default function ChatScreen({ route }) {
               })}
 
               <Text style={[styles.modalSectionTitle, { marginTop: 14 }]}>🎫 Tickets de Incidentes Comunitarios</Text>
-              {allTickets.map(t => {
-                const code = t.ticketCode || `#${t.id}`
+              {allTickets.map((t, idx) => {
+                const code = t.ticketCode || `#${t.id || idx}`
                 const isSelected = ticketCode.toUpperCase() === code.toUpperCase()
                 const rep = t.isAnonymous ? 'Anónimo Protegido' : (t.reporterName || 'Ramsés Solano')
                 return (
                   <TouchableOpacity
-                    key={code}
+                    key={`modal-tkt-${code}-${t.id || idx}`}
                     style={[styles.modalItem, isSelected && styles.modalItemSelected]}
                     onPress={() => {
                       setTicketCode(code)
@@ -386,13 +386,13 @@ export default function ChatScreen({ route }) {
           contentContainerStyle={styles.messagesContent}
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         >
-          {messages.map(msg => {
+          {messages.map((msg, idx) => {
             const isCitizen = msg.senderRole === 'Ciudadano'
             const isAudio = msg.messageType === 'Audio'
 
             return (
               <View
-                key={msg.id}
+                key={`chat-msg-${msg.id || 'm'}-${msg.sentAt || ''}-${idx}`}
                 style={[
                   styles.msgRow,
                   isCitizen ? styles.msgRowRight : styles.msgRowLeft

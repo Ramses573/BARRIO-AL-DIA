@@ -117,12 +117,12 @@ export default function TrackScreen({ route, navigation }) {
         {/* Chips de Selección Rápida */}
         <View style={styles.samplesRow}>
           <Text style={styles.samplesLabel}>Accesos directos:</Text>
-          {allTickets.slice(0, 4).map(sample => {
-            const code = sample.ticketCode || `#${sample.id}`
+          {allTickets.slice(0, 4).map((sample, idx) => {
+            const code = sample.ticketCode || `#${sample.id || idx}`
             const isSelected = ticketInput === code
             return (
               <TouchableOpacity
-                key={code}
+                key={`track-chip-${code}-${idx}`}
                 style={[styles.sampleChip, isSelected && styles.sampleChipActive]}
                 onPress={() => {
                   setTicketInput(code)
@@ -155,12 +155,12 @@ export default function TrackScreen({ route, navigation }) {
             </View>
 
             <ScrollView style={{ maxHeight: 350 }}>
-              {allTickets.map(t => {
-                const code = t.ticketCode || `#${t.id}`
+              {allTickets.map((t, idx) => {
+                const code = t.ticketCode || `#${t.id || idx}`
                 const isSelected = ticketInput === code
                 return (
                   <TouchableOpacity
-                    key={code}
+                    key={`track-picker-${code}-${t.id || idx}`}
                     style={[styles.pickerItem, isSelected && styles.pickerItemActive]}
                     onPress={() => {
                       setTicketInput(code)

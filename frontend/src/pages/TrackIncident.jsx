@@ -120,11 +120,11 @@ export default function TrackIncident() {
                 }}
               >
                 <option value="">-- Elige un ticket para consultar su seguimiento --</option>
-                {ticketsList.map(t => {
-                  const code = t.ticketCode || `#${t.id}`
+                {ticketsList.map((t, idx) => {
+                  const code = t.ticketCode || `#${t.id || idx}`
                   const reporter = t.isAnonymous ? 'Anónimo' : (t.reporterName || 'Ramsés Solano')
                   return (
-                    <option key={code} value={code}>
+                    <option key={`track-opt-${code}-${t.id || idx}`} value={code}>
                       {code} — {t.title} [{reporter}] ({t.status})
                     </option>
                   )
@@ -135,11 +135,11 @@ export default function TrackIncident() {
             {/* Chips de acceso rápido */}
             <div className="track-sample-chips">
               <span>Accesos directos:</span>
-              {ticketsList.slice(0, 4).map(t => {
-                const code = t.ticketCode || `#${t.id}`
+              {ticketsList.slice(0, 4).map((t, idx) => {
+                const code = t.ticketCode || `#${t.id || idx}`
                 return (
                   <button
-                    key={code}
+                    key={`track-chip-${code}-${idx}`}
                     type="button"
                     className={`track-chip-btn ${ticketInput === code ? 'active' : ''}`}
                     onClick={() => {
