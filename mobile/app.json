@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Barrio al Día",
+    "slug": "barrio-al-dia-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0284c7"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.barrioaldia.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Barrio al Día requiere acceso a la cámara para tomar fotos y videos de evidencia ciudadana.",
+        "NSPhotoLibraryUsageDescription": "Barrio al Día requiere acceso a tu galería para adjuntar evidencias.",
+        "NSMicrophoneUsageDescription": "Barrio al Día requiere acceso al micrófono para grabar notas de voz testimoniales y de asistencia.",
+        "NSLocationWhenInUseUsageDescription": "Barrio al Día requiere tu ubicación GPS para geolocalizar el incidente con precisión ante la municipalidad."
+      }
+    },
+    "android": {
+      "package": "com.barrioaldia.mobile",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite a Barrio al Día seleccionar fotos de evidencia."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Permite a Barrio al Día grabar notas de voz para asistencia ciudadana."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permite fijar las coordenadas GPS de la incidencia."
+        }
+      ]
+    ]
+  }
+}
