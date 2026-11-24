@@ -1,0 +1,505 @@
+.audit-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.audit-modal-wrapper {
+  max-width: 950px;
+  width: 100%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card, #ffffff);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: modalIn 0.2s ease-out;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Toolbar superior (No se imprime) */
+.audit-modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.5rem;
+  background: var(--bg-page, #f1f5f9);
+  border-bottom: 1px solid var(--border-color, #cbd5e1);
+}
+
+.toolbar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-modal-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.btn-modal-print:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+.btn-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-modal-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-main, #1e293b);
+}
+
+/* Hoja de Documento Oficial */
+.audit-sheet {
+  padding: 3rem 3.5rem;
+  background: #ffffff;
+  color: #0f172a;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+/* Membrete */
+.audit-official-header {
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.audit-header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.audit-republic-badge {
+  display: flex;
+  flex-direction: column;
+}
+
+.audit-republic-badge strong {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: #0f172a;
+}
+
+.audit-republic-badge span {
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.audit-folio-badge {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  text-align: right;
+}
+
+.folio-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.folio-number {
+  font-family: monospace;
+  font-size: 0.95rem;
+  color: #0284c7;
+}
+
+.audit-header-main {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.audit-entity-box h2 {
+  font-size: 1.45rem;
+  font-weight: 900;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.audit-entity-box h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0284c7;
+  margin: 0 0 0.35rem;
+  letter-spacing: 0.05em;
+}
+
+.audit-project-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.audit-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.meta-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.meta-label {
+  font-size: 0.68rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.jwt-certified {
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Resumen Ejecutivo */
+.summary-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.85rem;
+  border-left: 3px solid #0284c7;
+  padding-left: 0.5rem;
+}
+
+.audit-executive-summary {
+  margin-bottom: 2rem;
+}
+
+.audit-kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.audit-kpi-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.kpi-num {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.kpi-text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.audit-kpi-box.success .kpi-num { color: #059669; }
+.audit-kpi-box.warning .kpi-num { color: #0284c7; }
+.audit-kpi-box.alert .kpi-num { color: #d97706; }
+.audit-kpi-box.highlight {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: #0284c7;
+}
+.audit-kpi-box.highlight .kpi-num { color: #0284c7; }
+
+/* Tabla de Casos */
+.audit-cases-section {
+  margin-bottom: 2rem;
+}
+
+.audit-cases-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.audit-cases-table th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  text-align: left;
+  padding: 0.65rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.audit-cases-table td {
+  padding: 0.6rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  vertical-align: top;
+}
+
+.audit-table-date {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.audit-incident-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.15rem;
+}
+
+.audit-cat-tag {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.66rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.audit-location-text {
+  color: #334155;
+  font-size: 0.75rem;
+}
+
+.audit-priority-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.audit-priority-tag.priority-alta {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.audit-priority-tag.priority-media {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.audit-priority-tag.priority-baja {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.audit-status-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.audit-status-tag.status-resuelto {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.audit-status-tag.status-en-atención,
+.audit-status-tag.status-en-proceso {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.audit-status-tag.status-pendiente {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.audit-note-text {
+  font-size: 0.74rem;
+  color: #334155;
+  line-height: 1.35;
+}
+
+/* Cláusula Legal */
+.audit-legal-clause {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 0.85rem 1.15rem;
+  border-radius: 6px;
+  margin-bottom: 2.5rem;
+  font-size: 0.74rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+/* Firmas y Sellos */
+.audit-signatures-area {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.4fr;
+  gap: 1.5rem;
+  align-items: flex-end;
+  margin-top: 3rem;
+  page-break-inside: avoid;
+}
+
+.signature-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.signature-line {
+  width: 100%;
+  border-top: 1px solid #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.signature-box strong {
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.signature-box span {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.audit-stamp-box {
+  display: flex;
+  justify-content: center;
+}
+
+.stamp-circle {
+  width: 85px;
+  height: 85px;
+  border: 2px dashed #0284c7;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #0284c7;
+  text-align: center;
+}
+
+.stamp-circle span {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.stamp-circle small {
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+/* =======================================================
+   ESTILOS DE IMPRESIÓN (PDF Y ACTA OFICIAL CUC)
+   ======================================================= */
+@media print {
+  /* Ocultar elementos generales de la web */
+  body * {
+    visibility: hidden;
+  }
+
+  .global-navbar,
+  .main-footer,
+  .no-print,
+  .audit-modal-backdrop,
+  .admin-header,
+  .admin-kpi-grid,
+  .admin-analytics-section,
+  .admin-controls-card,
+  .admin-table-wrapper {
+    display: none !important;
+  }
+
+  /* Mostrar exclusivamente el área imprimible del acta */
+  #printable-audit-sheet,
+  #printable-audit-sheet * {
+    visibility: visible !important;
+  }
+
+  #printable-audit-sheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.5cm 1.5cm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .audit-cases-table {
+    page-break-inside: auto;
+  }
+
+  .audit-cases-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .audit-signatures-area {
+    page-break-inside: avoid;
+  }
+
+  @page {
+    size: letter portrait;
+    margin: 1cm;
+  }
+}

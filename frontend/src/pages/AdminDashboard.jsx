@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { getIncidents, updateIncidentStatus, fetchIncidentsFromApi, wipeIncidents } from '../services/incidentService'
 import { useToast } from '../components/Toast'
+import AuditReportModal from '../components/AuditReportModal'
 import './AdminDashboard.css'
 
 const OFFICIALS = [
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState(null)
   const [institutionalNoteText, setInstitutionalNoteText] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showAuditModal, setShowAuditModal] = useState(false)
   const [activeOfficial, setActiveOfficial] = useState(() => {
     try {
       const stored = localStorage.getItem('barrio_active_official')
@@ -482,13 +484,16 @@ export default function AdminDashboard() {
         </div>
 
         <div className="admin-actions-group">
+          <button className="btn-admin-action btn-audit-pdf" onClick={() => setShowAuditModal(true)} title="Generar Acta Oficial de Auditoría en PDF (CUC TI-155)">
+            <FileText size={14} /> Acta Oficial PDF
+          </button>
           <button className="btn-admin-action btn-csv" onClick={handleExportCSV} title="Descargar en formato CSV">
             <Download size={14} /> Exportar CSV
           </button>
           <button className="btn-admin-action btn-export" onClick={handleExportJSON} title="Descargar JSON de auditoría">
             <FileText size={14} /> Log JSON
           </button>
-          <button className="btn-admin-action btn-print" onClick={() => window.print()} title="Imprimir informe oficial">
+          <button className="btn-admin-action btn-print" onClick={() => setShowAuditModal(true)} title="Imprimir informe oficial">
             <Printer size={14} /> Imprimir
           </button>
           <button className="btn-admin-action btn-wipe" onClick={handleWipeData} title="Barrido de datos: limpiar todos los reportes para pruebas en limpio">
@@ -629,6 +634,21 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </div>
+
+      <AuditReportModal
+        isOpen={showAuditModal}
+        onClose={() => setShowAuditModal(false)}
+        incidents={filtered}
+        official={activeOfficial}
+        selectedEntity={selectedEntity}
+        metrics={{
+          total,
+          resolved,
+          inProgress,
+          pending,
+          resolutionRate
+        }}
+      />
     </div>
   )
 }

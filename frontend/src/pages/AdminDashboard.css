@@ -898,6 +898,18 @@
   align-items: center;
 }
 
+.btn-audit-pdf {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0369a1 !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.btn-audit-pdf:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px);
+}
+
 .btn-csv {
   background: #10b981 !important;
   color: #ffffff !important;
