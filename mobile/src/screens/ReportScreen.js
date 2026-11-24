@@ -47,6 +47,7 @@ export default function ReportScreen({ navigation }) {
   const [isLocating, setIsLocating] = useState(false)
   const [description, setDescription] = useState('')
   const [photos, setPhotos] = useState([])
+  const [video, setVideo] = useState(null)
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [createdTicket, setCreatedTicket] = useState(null)
@@ -119,6 +120,53 @@ export default function ReportScreen({ navigation }) {
     setPhotos(prev => prev.filter(p => p.id !== id))
   }
 
+  const handlePickVideo = async (useCamera = false) => {
+    try {
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync()
+        if (status !== 'granted') {
+          Alert.alert('Permiso requerido', 'Se requiere acceso a la cámara para grabar video.')
+          return
+        }
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+          videoMaxDuration: 25
+        })
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const asset = result.assets[0]
+          setVideo({
+            uri: asset.uri,
+            duration: asset.duration ? Math.round(asset.duration / 1000) : 15
+          })
+          Alert.alert('Video adjunto', 'Video de evidencia grabado con éxito.')
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+        if (status !== 'granted') {
+          Alert.alert('Permiso requerido', 'Se requiere acceso a la galería para adjuntar video.')
+          return
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Videos
+        })
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const asset = result.assets[0]
+          setVideo({
+            uri: asset.uri,
+            duration: asset.duration ? Math.round(asset.duration / 1000) : 15
+          })
+          Alert.alert('Video adjunto', 'Video de evidencia seleccionado con éxito.')
+        }
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo procesar el video.')
+    }
+  }
+
+  const handleRemoveVideo = () => {
+    setVideo(null)
+  }
+
   const handleSubmit = async () => {
     if (!description.trim()) {
       Alert.alert('Campo obligatorio', 'Por favor ingresa una breve descripción del incidente.')
@@ -139,6 +187,7 @@ export default function ReportScreen({ navigation }) {
         description: description.trim(),
         photos: photos.map(p => ({ uri: p.uri })),
         photo: photos[0] ? photos[0].uri : null,
+        video: video ? { uri: video.uri, duration: video.duration } : null,
         isAnonymous
       })
       setCreatedTicket(item)
@@ -154,6 +203,7 @@ export default function ReportScreen({ navigation }) {
     setUrgency('Media')
     setDescription('')
     setPhotos([])
+    setVideo(null)
     setLat(null)
     setLng(null)
     setCreatedTicket(null)
@@ -308,7 +358,47 @@ export default function ReportScreen({ navigation }) {
         </ScrollView>
       )}
 
-      {/* 5. Modo Anónimo */}
+      {/* 5. Video de Evidencia (Opcional) */}
+      <View style={styles.rowBetween}>
+        <Text style={styles.sectionTitle}>5. Video de Evidencia (Opcional)</Text>
+        {!video && (
+          <View style={styles.mediaButtonsRow}>
+            <TouchableOpacity
+              style={styles.btnMediaAction}
+              onPress={() => handlePickVideo(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="videocam" size={14} color={colors.primary} />
+              <Text style={[styles.btnMediaActionText, { color: colors.primary }]}>Grabar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.btnMediaAction}
+              onPress={() => handlePickVideo(false)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="film" size={14} color={colors.primary} />
+              <Text style={[styles.btnMediaActionText, { color: colors.primary }]}>Elegir</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {video && (
+        <View style={styles.videoCard}>
+          <View style={styles.videoCardInfo}>
+            <Ionicons name="film" size={20} color={colors.primary} />
+            <View>
+              <Text style={styles.videoCardTitle}>Video de evidencia adjunto</Text>
+              <Text style={styles.videoCardSubtitle}>Duración aprox. {video.duration} s</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.btnRemoveVideo} onPress={handleRemoveVideo}>
+            <Ionicons name="trash" size={16} color={colors.cne} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* 6. Modo Anónimo */}
       <View style={styles.anonCard}>
         <View style={styles.anonInfo}>
           <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
@@ -575,6 +665,34 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     paddingHorizontal: 4,
     borderRadius: 3,
+  },
+  videoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 16,
+  },
+  videoCardInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  videoCardTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.textMain,
+  },
+  videoCardSubtitle: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  btnRemoveVideo: {
+    padding: 6,
   },
   anonCard: {
     flexDirection: 'row',

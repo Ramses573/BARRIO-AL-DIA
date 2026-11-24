@@ -47,12 +47,73 @@
   line-height: 1.5;
 }
 
-/* Formulario de Búsqueda */
-.track-search-box {
-  display: flex;
-  gap: 0.65rem;
+/* ComboBox de Tickets */
+.track-combobox-card {
   max-width: 640px;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.5rem;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-sm, 12px);
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.track-combobox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main, #1e293b);
+  margin-bottom: 0.6rem;
+}
+
+.track-combobox-row {
+  margin-bottom: 0.75rem;
+}
+
+.track-combobox-select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--primary-color, #0284c7);
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+}
+
+.track-combobox-select:focus {
+  border-color: var(--primary-hover, #0369a1);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+}
+
+.btn-ticket-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #dc2626;
+  color: #ffffff;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-ticket-map-link:hover {
+  background: #b91c1c;
+  color: #ffffff;
+}
+
+.track-chip-btn.active {
+  background: var(--primary-color, #0284c7);
+  color: #ffffff;
+  border-color: var(--primary-color, #0284c7);
 }
 
 .track-input-wrapper {

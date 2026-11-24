@@ -21,7 +21,9 @@ import {
   Clock,
   Sparkles,
   Copy,
-  Check
+  Check,
+  Video,
+  Film
 } from 'lucide-react'
 import { addIncident } from '../services/incidentService'
 import { isAuthenticated } from '../services/authService'
@@ -53,6 +55,7 @@ export default function ReportIncident() {
     urgency: 'Media',
     description: 'La calle principal presenta acumulación de agua. Se recomienda transitar con precaución y utilizar una ruta alterna.',
     photos: [],
+    video: null,
     isAnonymous: false,
     confirmed: true
   })
@@ -293,6 +296,39 @@ export default function ReportIncident() {
     addToast('Fotografía eliminada del reporte', 'info')
   }
 
+  const handleVideoSelect = (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      addToast(`"${file.name}" no es un archivo de video válido.`, 'warning')
+      return
+    }
+
+    const maxBytes = 25 * 1024 * 1024
+    if (file.size > maxBytes) {
+      addToast('El video supera los 25 MB permitidos.', 'error')
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setForm(prev => ({
+      ...prev,
+      video: {
+        name: file.name,
+        preview: previewUrl,
+        sizeMb: (file.size / (1024 * 1024)).toFixed(1)
+      }
+    }))
+    addToast('Video de evidencia cargado con éxito', 'success')
+    e.target.value = ''
+  }
+
+  const handleRemoveVideo = () => {
+    setForm(prev => ({ ...prev, video: null }))
+    addToast('Video de evidencia eliminado', 'info')
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -317,6 +353,7 @@ export default function ReportIncident() {
       photo: primaryPhoto ? primaryPhoto.name : null,
       image: primaryPhoto ? primaryPhoto.preview : null,
       photos: form.photos.map(p => ({ name: p.name, preview: p.preview })),
+      video: form.video ? { name: form.video.name, preview: form.video.preview, sizeMb: form.video.sizeMb } : null,
       urgency: form.urgency,
       gpsAccuracy: form.gpsAccuracy,
       isAnonymous: form.isAnonymous,
@@ -650,6 +687,49 @@ export default function ReportIncident() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. Video de Evidencia (Opcional) */}
+                <div className="pdf-input-group">
+                  <div className="input-label-row">
+                    <label>
+                      <Film size={15} className="inline-icon text-blue" /> Video de evidencia (opcional)
+                    </label>
+                  </div>
+
+                  {!form.video ? (
+                    <div className="video-attach-simple">
+                      <label className="btn-attach-video-label">
+                        <Video size={16} className="inline-icon text-blue" />
+                        <span>Adjuntar video de evidencia (MP4, WebM o MOV)</span>
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime,video/*"
+                          style={{ display: 'none' }}
+                          onChange={handleVideoSelect}
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="video-attached-card">
+                      <video
+                        src={form.video.preview}
+                        controls
+                        playsInline
+                        className="attached-video-preview"
+                      />
+                      <div className="video-attached-footer">
+                        <span className="video-attached-name">📹 {form.video.name} ({form.video.sizeMb} MB)</span>
+                        <button
+                          type="button"
+                          className="btn-remove-attached-video"
+                          onClick={handleRemoveVideo}
+                        >
+                          <Trash2 size={13} /> Quitar video
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

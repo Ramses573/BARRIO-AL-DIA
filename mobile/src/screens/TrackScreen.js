@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Linking
+  Linking,
+  Modal,
+  Image
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors, shadows } from '../theme/colors'
-import { getIncidentByTicket } from '../services/incidentService'
+import { getIncidentByTicket, getAllTrackableTickets } from '../services/incidentService'
 import { getWebMapUrl } from '../config'
 
 const STAGES = [
@@ -22,20 +24,29 @@ const STAGES = [
   { id: 'Resuelto', label: '4. Resuelto' }
 ]
 
-const SAMPLE_CODES = ['TKT-CART-5821', 'TKT-TURR-2144', 'TKT-TARZ-9012']
-
 export default function TrackScreen({ route, navigation }) {
   const initialCode = route?.params?.code || 'TKT-CART-5821'
   const [ticketInput, setTicketInput] = useState(initialCode)
   const [incident, setIncident] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [allTickets, setAllTickets] = useState([])
+  const [showPicker, setShowPicker] = useState(false)
 
   useEffect(() => {
-    if (initialCode) {
-      setTicketInput(initialCode)
+    loadInitialData()
+  }, [initialCode])
+
+  const loadInitialData = async () => {
+    try {
+      const list = await getAllTrackableTickets()
+      setAllTickets(list)
+      const codeToSearch = initialCode || (list[0] ? list[0].ticketCode : 'TKT-CART-5821')
+      setTicketInput(codeToSearch)
+      searchTicket(codeToSearch)
+    } catch {
       searchTicket(initialCode)
     }
-  }, [initialCode])
+  }
 
   const searchTicket = async (codeToSearch) => {
     const code = (codeToSearch || ticketInput).trim().toUpperCase()
@@ -79,45 +90,99 @@ export default function TrackScreen({ route, navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Barra de Búsqueda */}
+      {/* ComboBox Selector de Tickets */}
       <View style={styles.searchCard}>
-        <Text style={styles.searchLabel}>Código de Seguimiento Oficial</Text>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={colors.primary} />
-          <TextInput
-            style={styles.searchInput}
-            value={ticketInput}
-            onChangeText={setTicketInput}
-            placeholder="Ej. TKT-CART-5821"
-            placeholderTextColor={colors.textLight}
-            autoCapitalize="characters"
-          />
-          <TouchableOpacity
-            style={styles.btnSearch}
-            onPress={() => searchTicket()}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.btnSearchText}>Consultar</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.searchLabel}>Seleccionar Ticket Cantonal (ComboBox):</Text>
+        <TouchableOpacity
+          style={styles.comboboxTrigger}
+          onPress={() => setShowPicker(true)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.comboboxTriggerLeft}>
+            <Ionicons name="folder-open" size={20} color={colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.comboboxSelectedCode}>
+                {ticketInput || 'Selecciona un ticket...'}
+              </Text>
+              {incident && (
+                <Text style={styles.comboboxSelectedTitle} numberOfLines={1}>
+                  {incident.title} ({incident.status})
+                </Text>
+              )}
+            </View>
+          </View>
+          <Ionicons name="chevron-down" size={20} color={colors.primary} />
+        </TouchableOpacity>
 
-        {/* Chips de Sugerencia */}
+        {/* Chips de Selección Rápida */}
         <View style={styles.samplesRow}>
-          <Text style={styles.samplesLabel}>Ejemplos rápidos:</Text>
-          {SAMPLE_CODES.map(sample => (
-            <TouchableOpacity
-              key={sample}
-              style={styles.sampleChip}
-              onPress={() => {
-                setTicketInput(sample)
-                searchTicket(sample)
-              }}
-            >
-              <Text style={styles.sampleChipText}>{sample}</Text>
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.samplesLabel}>Accesos directos:</Text>
+          {allTickets.slice(0, 4).map(sample => {
+            const code = sample.ticketCode || `#${sample.id}`
+            const isSelected = ticketInput === code
+            return (
+              <TouchableOpacity
+                key={code}
+                style={[styles.sampleChip, isSelected && styles.sampleChipActive]}
+                onPress={() => {
+                  setTicketInput(code)
+                  searchTicket(code)
+                }}
+              >
+                <Text style={[styles.sampleChipText, isSelected && styles.sampleChipTextActive]}>
+                  {code}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
         </View>
       </View>
+
+      {/* Modal Picker ComboBox */}
+      <Modal
+        visible={showPicker}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPicker(false)}
+      >
+        <View style={styles.pickerModalOverlay}>
+          <View style={styles.pickerModalContent}>
+            <View style={styles.pickerModalHeader}>
+              <Text style={styles.pickerModalTitle}>Elegir Ticket para Seguimiento</Text>
+              <TouchableOpacity onPress={() => setShowPicker(false)}>
+                <Ionicons name="close" size={22} color={colors.textMain} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 350 }}>
+              {allTickets.map(t => {
+                const code = t.ticketCode || `#${t.id}`
+                const isSelected = ticketInput === code
+                return (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.pickerItem, isSelected && styles.pickerItemActive]}
+                    onPress={() => {
+                      setTicketInput(code)
+                      setShowPicker(false)
+                      searchTicket(code)
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.pickerItemCode, isSelected && { color: colors.primary }]}>
+                        {code}
+                      </Text>
+                      <Text style={styles.pickerItemTitle} numberOfLines={1}>{t.title}</Text>
+                      <Text style={styles.pickerItemMeta}>{t.category} • {t.status}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Resultado */}
       {loading ? (
@@ -145,6 +210,27 @@ export default function TrackScreen({ route, navigation }) {
             <Ionicons name="location" size={14} color={colors.primary} />
             <Text style={styles.locText}>{incident.location}</Text>
           </View>
+
+          {/* Fotografía de evidencia si existe */}
+          {((incident.photos && incident.photos.length > 0) || incident.photo) && (
+            <View style={styles.trackEvidenceWrap}>
+              <Image
+                source={{ uri: (incident.photos && incident.photos[0]?.uri) || (typeof incident.photo === 'string' ? incident.photo : null) }}
+                style={styles.trackEvidenceImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+
+          {/* Indicador de Video si fue adjuntado */}
+          {incident.video && (
+            <View style={styles.trackVideoBadge}>
+              <Ionicons name="film" size={14} color={colors.primary} />
+              <Text style={styles.trackVideoBadgeText}>
+                Video de evidencia adjunto ({incident.video.duration || 15} s)
+              </Text>
+            </View>
+          )}
 
           <TouchableOpacity
             style={styles.btnOpenWebMap}
@@ -266,34 +352,34 @@ const styles = StyleSheet.create({
     color: colors.textMain,
     marginBottom: 8,
   },
-  searchBar: {
+  comboboxTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.bgSubtle,
     borderRadius: 10,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 10,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    marginBottom: 12,
   },
-  searchInput: {
+  comboboxTriggerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 8,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textMain,
+    marginRight: 8,
   },
-  btnSearch: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 7,
+  comboboxSelectedCode: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.primary,
   },
-  btnSearchText: {
-    color: '#ffffff',
-    fontSize: 12.5,
-    fontWeight: '700',
+  comboboxSelectedTitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 1,
   },
   samplesRow: {
     flexDirection: 'row',
@@ -308,13 +394,76 @@ const styles = StyleSheet.create({
   sampleChip: {
     backgroundColor: colors.primarySubtle,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  sampleChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   sampleChipText: {
     fontSize: 10.5,
     fontWeight: '700',
     color: colors.primaryDark,
+  },
+  sampleChipTextActive: {
+    color: '#ffffff',
+  },
+  pickerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerModalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  pickerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 10,
+  },
+  pickerModalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textMain,
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.bgSubtle,
+    borderRadius: 8,
+  },
+  pickerItemActive: {
+    backgroundColor: colors.primarySubtle,
+  },
+  pickerItemCode: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.textMain,
+  },
+  pickerItemTitle: {
+    fontSize: 12.5,
+    color: colors.textMain,
+    marginTop: 2,
+  },
+  pickerItemMeta: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 1,
   },
   centerBox: {
     alignItems: 'center',
@@ -377,6 +526,34 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontWeight: '500',
     flexShrink: 1,
+  },
+  trackEvidenceWrap: {
+    width: '100%',
+    height: 160,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: colors.bgSubtle,
+    marginBottom: 10,
+  },
+  trackEvidenceImage: {
+    width: '100%',
+    height: '100%',
+  },
+  trackVideoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  trackVideoBadgeText: {
+    fontSize: 11.5,
+    color: colors.primaryDark,
+    fontWeight: '700',
   },
   btnOpenWebMap: {
     flexDirection: 'row',

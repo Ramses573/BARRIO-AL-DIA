@@ -117,6 +117,14 @@ export const getIncidents = async (filters = {}) => {
 /**
  * Búsqueda de incidencia por código de ticket exacto
  */
+export const getAllTrackableTickets = async () => {
+  const all = await getIncidents()
+  const map = new Map()
+  INITIAL_INCIDENTS.forEach(i => map.set((i.ticketCode || String(i.id)).toUpperCase(), i))
+  all.forEach(i => map.set((i.ticketCode || String(i.id)).toUpperCase(), i))
+  return Array.from(map.values())
+}
+
 export const getIncidentByTicket = async (ticketCode) => {
   if (!ticketCode) return null
   const cleaned = ticketCode.trim().toUpperCase()
@@ -129,8 +137,8 @@ export const getIncidentByTicket = async (ticketCode) => {
     // Modo offline
   }
 
-  // Buscar en caché
-  const all = await getIncidents()
+  // Buscar en caché combinada
+  const all = await getAllTrackableTickets()
   return all.find(i =>
     (i.ticketCode && i.ticketCode.toUpperCase() === cleaned) ||
     String(i.id) === cleaned

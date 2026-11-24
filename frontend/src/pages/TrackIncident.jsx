@@ -18,7 +18,7 @@ import {
   Sparkles,
   ChevronRight
 } from 'lucide-react'
-import { getIncidents, getIncidentByTicketCode } from '../services/incidentService'
+import { getAllTrackableTickets, getIncidentByTicketCode } from '../services/incidentService'
 import { useToast } from '../components/Toast'
 import './TrackIncident.css'
 
@@ -27,16 +27,19 @@ export default function TrackIncident() {
   const { code: paramCode } = useParams()
   const { addToast } = useToast()
 
-  const initialCode = paramCode || searchParams.get('code') || ''
+  const allTickets = getAllTrackableTickets()
+  const initialCode = paramCode || searchParams.get('code') || (allTickets[0] ? (allTickets[0].ticketCode || String(allTickets[0].id)) : '')
   const [ticketInput, setTicketInput] = useState(initialCode)
   const [ticketData, setTicketData] = useState(null)
   const [hasSearched, setHasSearched] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
-  // Auto-buscar si viene en URL
+  // Auto-cargar ticket inicial
   useEffect(() => {
-    if (initialCode) {
-      handleSearch(initialCode)
+    const code = initialCode || (allTickets[0] ? (allTickets[0].ticketCode || String(allTickets[0].id)) : '')
+    if (code) {
+      setTicketInput(code)
+      handleSearch(code)
     }
   }, [initialCode])
 
@@ -59,11 +62,6 @@ export default function TrackIncident() {
     }
   }
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault()
-    handleSearch(ticketInput)
-  }
-
   const handleShare = () => {
     const code = ticketData?.ticketCode || `#${ticketData?.id}`
     const fullUrl = `${window.location.origin}/track?code=${encodeURIComponent(code)}`
@@ -72,9 +70,6 @@ export default function TrackIncident() {
     addToast('Enlace de seguimiento copiado al portapapeles', 'info')
     setTimeout(() => setCopiedLink(false), 2500)
   }
-
-  // Obtener tickets de ejemplo de la base local para pruebas
-  const sampleTickets = getIncidents().slice(0, 3).map(inc => inc.ticketCode || `TKT-CART-${inc.id}`)
 
   return (
     <div className="track-page-wrapper">
@@ -88,47 +83,59 @@ export default function TrackIncident() {
           </div>
           <h1>Seguimiento de Incidentes Comunitarios</h1>
           <p className="track-subtitle">
-            Ingresá tu código de ticket para verificar el estado de atención, cuadrillas municipales asignadas y fotos de resolución técnica.
+            Seleccioná un ticket del combo box para verificar el estado de atención, cuadrillas municipales asignadas y fotos de resolución técnica.
           </p>
 
-          {/* Formulario de Búsqueda */}
-          <form onSubmit={handleFormSubmit} className="track-search-box">
-            <div className="track-input-wrapper">
-              <Search size={18} className="track-search-icon" />
-              <input
-                type="text"
+          {/* Selector ComboBox de Tickets */}
+          <div className="track-combobox-card">
+            <label htmlFor="ticket-combobox-select" className="track-combobox-label">
+              <Sparkles size={14} className="inline-icon text-amber" />
+              <span>Selecciona un Ticket Cantonal del ComboBox:</span>
+            </label>
+            <div className="track-combobox-row">
+              <select
+                id="ticket-combobox-select"
+                className="track-combobox-select"
                 value={ticketInput}
-                onChange={(e) => setTicketInput(e.target.value)}
-                placeholder="Ingresá el código de ticket (Ej. TKT-CART-5821 o #1)"
-                className="track-search-input"
-                autoFocus
-              />
+                onChange={(e) => {
+                  const val = e.target.value
+                  setTicketInput(val)
+                  if (val) handleSearch(val)
+                }}
+              >
+                <option value="">-- Elige un ticket para consultar su seguimiento --</option>
+                {allTickets.map(t => {
+                  const code = t.ticketCode || `#${t.id}`
+                  return (
+                    <option key={code} value={code}>
+                      {code} — {t.title} ({t.category} • {t.status})
+                    </option>
+                  )
+                })}
+              </select>
             </div>
-            <button type="submit" className="btn-track-submit">
-              Consultar Estado <ArrowRight size={15} />
-            </button>
-          </form>
 
-          {/* Ejemplos rápidos para probar */}
-          {sampleTickets.length > 0 && (
+            {/* Chips de acceso rápido */}
             <div className="track-sample-chips">
-              <Sparkles size={13} className="text-amber" />
-              <span>Tickets de ejemplo:</span>
-              {sampleTickets.map(code => (
-                <button
-                  key={code}
-                  type="button"
-                  className="track-chip-btn"
-                  onClick={() => {
-                    setTicketInput(code)
-                    handleSearch(code)
-                  }}
-                >
-                  {code}
-                </button>
-              ))}
+              <span>Accesos directos:</span>
+              {allTickets.slice(0, 4).map(t => {
+                const code = t.ticketCode || `#${t.id}`
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    className={`track-chip-btn ${ticketInput === code ? 'active' : ''}`}
+                    onClick={() => {
+                      setTicketInput(code)
+                      handleSearch(code)
+                    }}
+                  >
+                    {code}
+                  </button>
+                )
+              })}
             </div>
-          )}
+          </div>
         </header>
 
         {/* Resultado: Reporte Encontrado */}
@@ -280,25 +287,35 @@ export default function TrackIncident() {
               </div>
             )}
 
+            {/* Video de Evidencia (Únicamente si fue subido en el reporte) */}
+            {(ticketData.video?.preview || ticketData.videoUrl || (typeof ticketData.video === 'string' && ticketData.video)) && (
+              <div className="ticket-photo-box">
+                <span className="detail-label">Video de Evidencia Adjunto:</span>
+                <div className="photo-preview-wrap">
+                  <video
+                    src={ticketData.video?.preview || ticketData.videoUrl || ticketData.video}
+                    controls
+                    playsInline
+                    style={{ width: '100%', maxHeight: '280px', borderRadius: '8px' }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Acciones del Ticket */}
             <div className="ticket-actions-bar">
+              <Link
+                to={`/map?lat=${ticketData.lat || 9.8644}&lng=${ticketData.lng || -83.9194}&title=${encodeURIComponent(ticketData.title)}`}
+                className="btn-ticket-map-link"
+              >
+                <MapPin size={15} /> Ver en Mapa en Tiempo Real
+              </Link>
               <button type="button" className="btn-ticket-share" onClick={handleShare}>
                 <Share2 size={15} />
                 <span>{copiedLink ? '¡Enlace Copiado!' : 'Compartir Seguimiento'}</span>
               </button>
               <button type="button" className="btn-ticket-print" onClick={() => window.print()}>
                 <FileText size={15} /> Imprimir Comprobante
-              </button>
-              <button
-                type="button"
-                className="btn-ticket-reset"
-                onClick={() => {
-                  setTicketData(null)
-                  setTicketInput('')
-                  setHasSearched(false)
-                }}
-              >
-                <RotateCcw size={15} /> Consultar Otro Ticket
               </button>
             </div>
           </div>
