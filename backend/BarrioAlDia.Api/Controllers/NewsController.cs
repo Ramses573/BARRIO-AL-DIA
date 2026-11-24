@@ -58,6 +58,7 @@ public class NewsController : ControllerBase
                 PublishedAt = n.PublishedAt,
                 IsUrgent = n.IsUrgent,
                 ImageUrl = n.ImageUrl,
+                VideoUrl = n.VideoUrl,
                 OfficialLink = n.OfficialLink,
                 Lat = n.Lat,
                 Lng = n.Lng
@@ -90,6 +91,7 @@ public class NewsController : ControllerBase
             PublishedAt = news.PublishedAt,
             IsUrgent = news.IsUrgent,
             ImageUrl = news.ImageUrl,
+            VideoUrl = news.VideoUrl,
             OfficialLink = news.OfficialLink,
             Lat = news.Lat,
             Lng = news.Lng
@@ -117,6 +119,7 @@ public class NewsController : ControllerBase
             PublishedAt = DateTime.UtcNow,
             IsUrgent = dto.IsUrgent,
             ImageUrl = dto.ImageUrl,
+            VideoUrl = dto.VideoUrl,
             OfficialLink = dto.OfficialLink,
             Lat = dto.Lat,
             Lng = dto.Lng
@@ -138,6 +141,7 @@ public class NewsController : ControllerBase
             PublishedAt = article.PublishedAt,
             IsUrgent = article.IsUrgent,
             ImageUrl = article.ImageUrl,
+            VideoUrl = article.VideoUrl,
             OfficialLink = article.OfficialLink,
             Lat = article.Lat,
             Lng = article.Lng

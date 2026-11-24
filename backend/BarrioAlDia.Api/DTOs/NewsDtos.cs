@@ -15,6 +15,7 @@ public class NewsDto
     public DateTime PublishedAt { get; set; }
     public bool IsUrgent { get; set; }
     public string? ImageUrl { get; set; }
+    public string? VideoUrl { get; set; }
     public string? OfficialLink { get; set; }
     public double? Lat { get; set; }
     public double? Lng { get; set; }
@@ -50,6 +51,7 @@ public class CreateNewsDto
     public bool IsUrgent { get; set; } = false;
 
     public string? ImageUrl { get; set; }
+    public string? VideoUrl { get; set; }
     public string? OfficialLink { get; set; }
     public double? Lat { get; set; }
     public double? Lng { get; set; }

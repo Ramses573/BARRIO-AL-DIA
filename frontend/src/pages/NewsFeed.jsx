@@ -234,8 +234,21 @@ export default function NewsFeed() {
                 </button>
               </div>
 
+              {/* Video de la Noticia (Únicamente si fue cargado un archivo real) */}
+              {selectedArticle.videoUrl && (
+                <div className="news-modal-media-frame">
+                  <video
+                    src={selectedArticle.videoUrl}
+                    controls
+                    playsInline
+                    className="news-modal-photo-img"
+                    style={{ width: '100%', maxHeight: '280px', borderRadius: '10px' }}
+                  />
+                </div>
+              )}
+
               {/* Fotografía de la Noticia en Alta Resolución */}
-              {selectedArticle.imageUrl && (
+              {!selectedArticle.videoUrl && selectedArticle.imageUrl && (
                 <div className="news-modal-media-frame">
                   <img
                     src={selectedArticle.imageUrl}

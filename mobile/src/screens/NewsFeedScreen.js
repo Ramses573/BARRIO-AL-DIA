@@ -213,6 +213,14 @@ export default function NewsFeedScreen() {
               </View>
 
               <ScrollView style={styles.modalScroll}>
+                {/* Video oficial si existe */}
+                {selectedArticle.videoUrl && (
+                  <View style={styles.modalVideoBadge}>
+                    <Ionicons name="film" size={16} color={colors.primary} />
+                    <Text style={styles.modalVideoBadgeText}>Video oficial disponible en el portal</Text>
+                  </View>
+                )}
+
                 {/* Fotografía de la Noticia */}
                 {selectedArticle.imageUrl && (
                   <View style={styles.modalImageWrapper}>
@@ -484,6 +492,21 @@ const styles = StyleSheet.create({
   },
   modalScroll: {
     marginBottom: 20,
+  },
+  modalVideoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary + '14',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  modalVideoBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
   },
   modalImageWrapper: {
     width: '100%',

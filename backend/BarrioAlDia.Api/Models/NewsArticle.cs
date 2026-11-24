@@ -41,6 +41,9 @@ public class NewsArticle
     [MaxLength(500)]
     public string? ImageUrl { get; set; }
 
+    [MaxLength(500)]
+    public string? VideoUrl { get; set; }
+
     [MaxLength(300)]
     public string? OfficialLink { get; set; }
 
