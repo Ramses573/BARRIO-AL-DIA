@@ -213,7 +213,10 @@ export default function ChatScreen({ route }) {
     >
       {/* ComboBox Selector de Canal o Ticket Cantonal (Sin input manual) */}
       <View style={styles.topComboboxBar}>
-        <Text style={styles.topComboboxLabel}>Canal / Ticket Seleccionado (ComboBox):</Text>
+        <View style={styles.topComboboxHeaderRow}>
+          <Text style={styles.topComboboxLabel}>CANAL / TICKET (COMBOBOX):</Text>
+          <Text style={styles.topComboboxHint}>Toca para cambiar</Text>
+        </View>
         <TouchableOpacity
           style={styles.comboboxTriggerBtn}
           onPress={() => setShowPicker(true)}
@@ -232,6 +235,40 @@ export default function ChatScreen({ route }) {
           </View>
           <Ionicons name="chevron-down-circle" size={20} color={colors.primary} />
         </TouchableOpacity>
+
+        {/* Chips de selección rápida con 1 toque */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chatChipsRow}
+          contentContainerStyle={{ gap: 6, paddingVertical: 4 }}
+        >
+          {DIRECT_CHANNELS.map(ch => (
+            <TouchableOpacity
+              key={ch.code}
+              style={[styles.chatChipBtn, ticketCode === ch.code && styles.chatChipBtnActive]}
+              onPress={() => setTicketCode(ch.code)}
+            >
+              <Text style={[styles.chatChipText, ticketCode === ch.code && styles.chatChipTextActive]}>
+                {ch.code === 'GENERAL' ? '📢 General' : ch.code.replace('EMERGENCIA-', '🚨 ')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {allTickets.slice(0, 3).map(t => {
+            const code = t.ticketCode || `#${t.id}`
+            return (
+              <TouchableOpacity
+                key={code}
+                style={[styles.chatChipBtn, ticketCode.toUpperCase() === code.toUpperCase() && styles.chatChipBtnActive]}
+                onPress={() => setTicketCode(code)}
+              >
+                <Text style={[styles.chatChipText, ticketCode.toUpperCase() === code.toUpperCase() && styles.chatChipTextActive]}>
+                  🎫 {code}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
       </View>
 
       {/* Modal Picker tipo ComboBox */}
@@ -449,12 +486,46 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     ...shadows.sm,
   },
+  topComboboxHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   topComboboxLabel: {
     fontSize: 11,
     color: '#64748b',
-    fontWeight: '700',
-    marginBottom: 6,
+    fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  topComboboxHint: {
+    fontSize: 10.5,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  chatChipsRow: {
+    marginTop: 8,
+  },
+  chatChipBtn: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  chatChipBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chatChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  chatChipTextActive: {
+    color: '#ffffff',
   },
   comboboxTriggerBtn: {
     flexDirection: 'row',
