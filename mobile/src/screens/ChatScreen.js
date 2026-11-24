@@ -15,6 +15,8 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { Audio } from 'expo-av'
 import { colors, shadows } from '../theme/colors'
+import * as signalR from '@microsoft/signalr'
+import { DEV_PC_IP } from '../config'
 import { getMessagesByTicket, sendChatMessage } from '../services/chatService'
 import { getAllTrackableTickets } from '../services/incidentService'
 import { getCurrentUser } from '../services/authService'
@@ -55,7 +57,7 @@ export default function ChatScreen({ route }) {
   useEffect(() => {
     loadChat()
 
-    // Sincronización en tiempo real cada 1.2s para recibir mensajes instantáneamente
+    // 1. Sincronización en tiempo real de respaldo cada 800ms
     const interval = setInterval(async () => {
       try {
         const fresh = await getMessagesByTicket(ticketCode)
@@ -64,7 +66,7 @@ export default function ChatScreen({ route }) {
             const prevSig = prev.map(m => `${m.id}-${m.sentAt}`).join('|')
             const freshSig = fresh.map(m => `${m.id}-${m.sentAt}`).join('|')
             if (prevSig !== freshSig) {
-              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100)
+              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50)
               return fresh
             }
             return prev
@@ -73,10 +75,46 @@ export default function ChatScreen({ route }) {
       } catch {
         // Silencioso
       }
-    }, 1200)
+    }, 800)
+
+    // 2. Conexión SignalR instantánea en la app móvil
+    let connection = null
+    try {
+      const hubUrl = Platform.OS === 'web'
+        ? 'http://localhost:5000/chatHub'
+        : `http://${DEV_PC_IP}:5000/chatHub`
+
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect([0, 1000, 2000, 5000])
+        .build()
+
+      connection.on('ReceiveMessage', (msg) => {
+        if (!msg) return
+        const cleanMsgCode = (msg.ticketCode || '').replace(/^#/, '').trim().toUpperCase()
+        const cleanCurrentCode = (ticketCode || '').replace(/^#/, '').trim().toUpperCase()
+
+        if (cleanMsgCode === cleanCurrentCode) {
+          setMessages(prev => {
+            if (!prev.some(m => m.id === msg.id)) {
+              setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 50)
+              return [...prev, msg]
+            }
+            return prev
+          })
+        }
+      })
+
+      connection.start().catch(() => {})
+    } catch {
+      // Silencioso
+    }
 
     return () => {
       clearInterval(interval)
+      if (connection) {
+        connection.stop()
+      }
       if (sound) sound.unloadAsync()
       if (timerRef.current) clearInterval(timerRef.current)
     }

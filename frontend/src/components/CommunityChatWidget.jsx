@@ -64,7 +64,7 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
 
     loadMessages()
 
-    // 1. Polling silencioso en tiempo real cada 1.2s
+    // 1. Polling silencioso en tiempo real cada 800ms
     const interval = setInterval(async () => {
       try {
         const fresh = await getMessagesByTicket(ticketCode)
@@ -81,18 +81,26 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       } catch {
         // Silencioso
       }
-    }, 1200)
+    }, 800)
 
     // 2. Conexión SignalR instantánea
     let connection = null
     try {
+      const hubUrl = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+        ? `http://${window.location.hostname}:5000/chatHub`
+        : 'http://localhost:5000/chatHub'
+
       connection = new signalR.HubConnectionBuilder()
-        .withUrl('http://localhost:5000/chatHub')
-        .withAutomaticReconnect()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect([0, 1000, 2000, 5000])
         .build()
 
       connection.on('ReceiveMessage', (msg) => {
-        if (msg && msg.ticketCode && msg.ticketCode.toUpperCase() === ticketCode.toUpperCase()) {
+        if (!msg) return
+        const cleanMsgCode = (msg.ticketCode || '').replace(/^#/, '').trim().toUpperCase()
+        const cleanCurrentCode = (ticketCode || '').replace(/^#/, '').trim().toUpperCase()
+
+        if (cleanMsgCode === cleanCurrentCode) {
           setMessages(prev => {
             if (!prev.some(m => m.id === msg.id)) {
               return [...prev, msg]
