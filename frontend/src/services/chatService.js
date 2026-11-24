@@ -49,7 +49,10 @@ export const getMessagesByTicket = async (ticketCode) => {
   const code = (ticketCode || 'GENERAL').trim().toUpperCase()
 
   try {
-    const res = await fetch(`${API_BASE}/chat/ticket/${encodeURIComponent(code)}`)
+    const res = await fetch(`${API_BASE}/chat/ticket/${encodeURIComponent(code)}?_t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    })
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data) && data.length > 0) {

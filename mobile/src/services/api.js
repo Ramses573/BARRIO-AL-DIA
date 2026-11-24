@@ -70,8 +70,15 @@ export const apiGet = async (path, params = {}) => {
         query.append(k, String(v))
       }
     })
+    query.append('_t', String(Date.now()))
     const qs = query.toString() ? `?${query.toString()}` : ''
-    const res = await fetchWithTimeout(`${base}${path}${qs}`, { method: 'GET' })
+    const res = await fetchWithTimeout(`${base}${path}${qs}`, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
     if (!res.ok) return null
     return await res.json()
   } catch {

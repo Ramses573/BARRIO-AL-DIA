@@ -22,9 +22,14 @@ public class ChatController : ControllerBase
     }
 
     // GET: api/chat/ticket/{ticketCode}
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [HttpGet("ticket/{ticketCode}")]
     public async Task<IActionResult> GetMessagesByTicket(string ticketCode)
     {
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+
         var code = ticketCode.Trim().ToUpper();
 
         var messages = await _context.ChatMessages

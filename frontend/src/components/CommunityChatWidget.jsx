@@ -64,13 +64,15 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
 
     loadMessages()
 
-    // 1. Polling silencioso en tiempo real cada 1.5s
+    // 1. Polling silencioso en tiempo real cada 1.2s
     const interval = setInterval(async () => {
       try {
         const fresh = await getMessagesByTicket(ticketCode)
         if (Array.isArray(fresh)) {
           setMessages(prev => {
-            if (fresh.length !== prev.length || (fresh.length > 0 && fresh[fresh.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+            const prevSig = prev.map(m => `${m.id}-${m.sentAt}`).join('|')
+            const freshSig = fresh.map(m => `${m.id}-${m.sentAt}`).join('|')
+            if (prevSig !== freshSig) {
               return fresh
             }
             return prev
@@ -79,7 +81,7 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       } catch {
         // Silencioso
       }
-    }, 1500)
+    }, 1200)
 
     // 2. Conexión SignalR instantánea
     let connection = null
