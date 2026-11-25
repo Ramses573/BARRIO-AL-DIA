@@ -93,6 +93,8 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
 
   // Reproducción de audios
   const [playingId, setPlayingId] = useState(null)
+  const [playProgress, setPlayProgress] = useState(0)
+  const [playCurrentSec, setPlayCurrentSec] = useState(0)
   const audioPlayerRef = useRef(new Audio())
 
   const messagesEndRef = useRef(null)
@@ -183,6 +185,8 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       // Ignorar
     }
     setPlayingId(null)
+    setPlayProgress(0)
+    setPlayCurrentSec(0)
     if (isRecording) {
       cancelRecording()
     }
@@ -346,6 +350,8 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     if (playingId === msg.id) {
       audioPlayerRef.current.pause()
       setPlayingId(null)
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
       return
     }
 
@@ -361,15 +367,29 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     }
 
     audioPlayerRef.current.pause()
+    setPlayProgress(0)
+    setPlayCurrentSec(0)
     audioPlayerRef.current.src = src
     audioPlayerRef.current.load()
 
+    audioPlayerRef.current.ontimeupdate = () => {
+      const dur = audioPlayerRef.current.duration
+      const cur = audioPlayerRef.current.currentTime
+      const total = (dur && isFinite(dur) && dur > 0) ? dur : (msg.audioDurationSeconds || 1)
+      setPlayProgress(Math.min(100, Math.round((cur / total) * 100)))
+      setPlayCurrentSec(Math.floor(cur))
+    }
+
     audioPlayerRef.current.onended = () => {
       setPlayingId(null)
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
     }
     audioPlayerRef.current.onerror = () => {
       addToast('No se pudo reproducir la nota de voz.', 'info')
       setPlayingId(null)
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
     }
 
     try {
@@ -378,6 +398,8 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     } catch {
       addToast('No se pudo reproducir la nota de voz.', 'info')
       setPlayingId(null)
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
     }
   }
 
@@ -480,16 +502,31 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
                         >
                           {playingId === msg.id ? <Pause size={14} /> : <Play size={14} />}
                         </button>
-                        <div className="audio-wave-bar">
-                          <span className="wave-line"></span>
-                          <span className="wave-line"></span>
-                          <span className="wave-line"></span>
-                          <span className="wave-line"></span>
-                          <span className="wave-line"></span>
-                          <span className="wave-line"></span>
+                        <div className="audio-wave-progress-wrap">
+                          <div className="audio-wave-bar">
+                            {[10, 16, 12, 16, 11, 14, 9, 15].map((h, bIdx) => {
+                              const barPct = ((bIdx + 1) / 8) * 100
+                              const active = playingId === msg.id && playProgress >= barPct - 10
+                              return (
+                                <span
+                                  key={`wave-${bIdx}`}
+                                  className={`wave-line ${active ? 'active' : ''}`}
+                                  style={{ height: `${h}px` }}
+                                />
+                              )
+                            })}
+                          </div>
+                          <div className="audio-progress-track">
+                            <div
+                              className="audio-progress-fill"
+                              style={{ width: `${playingId === msg.id ? playProgress : 0}%` }}
+                            />
+                          </div>
                         </div>
                         <span className="audio-duration-tag">
-                          {msg.audioDurationSeconds ? `0:${String(msg.audioDurationSeconds).padStart(2, '0')}` : '0:06'}
+                          {playingId === msg.id
+                            ? `0:${String(playCurrentSec).padStart(2, '0')}`
+                            : (msg.audioDurationSeconds ? `0:${String(msg.audioDurationSeconds).padStart(2, '0')}` : '0:06')}
                         </span>
                         <Volume2 size={13} className="audio-volume-icon" />
                       </div>

@@ -47,6 +47,8 @@ export default function ChatScreen({ route }) {
   // Reproducción de audio
   const [sound, setSound] = useState(null)
   const [playingId, setPlayingId] = useState(null)
+  const [playProgress, setPlayProgress] = useState(0)
+  const [playCurrentSec, setPlayCurrentSec] = useState(0)
 
   const scrollViewRef = useRef(null)
 
@@ -252,6 +254,8 @@ export default function ChatScreen({ route }) {
         setSound(null)
         if (playingId === msgId) {
           setPlayingId(null)
+          setPlayProgress(0)
+          setPlayCurrentSec(0)
           return
         }
       }
@@ -272,20 +276,34 @@ export default function ChatScreen({ route }) {
         playsInSilentModeIOS: true
       })
 
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
+
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: resolvedUri },
-        { shouldPlay: true }
+        { shouldPlay: true, progressUpdateIntervalMillis: 100 }
       )
       setSound(newSound)
       setPlayingId(msgId)
 
       newSound.setOnPlaybackStatusUpdate(status => {
+        if (status.isLoaded) {
+          if (status.durationMillis && status.durationMillis > 0) {
+            const pct = Math.min(100, Math.round((status.positionMillis / status.durationMillis) * 100))
+            setPlayProgress(pct)
+          }
+          setPlayCurrentSec(Math.floor((status.positionMillis || 0) / 1000))
+        }
         if (status.didJustFinish) {
           setPlayingId(null)
+          setPlayProgress(0)
+          setPlayCurrentSec(0)
         }
       })
     } catch {
       setPlayingId(null)
+      setPlayProgress(0)
+      setPlayCurrentSec(0)
       Alert.alert('Audio', 'No se pudo reproducir este archivo de audio.')
     }
   }
@@ -494,15 +512,48 @@ export default function ChatScreen({ route }) {
                           color={isCitizen ? colors.primary : '#ffffff'}
                         />
                       </TouchableOpacity>
-                      <View style={styles.audioWaveform}>
-                        <View style={[styles.waveLine, { height: 12 }]} />
-                        <View style={[styles.waveLine, { height: 20 }]} />
-                        <View style={[styles.waveLine, { height: 16 }]} />
-                        <View style={[styles.waveLine, { height: 24 }]} />
-                        <View style={[styles.waveLine, { height: 14 }]} />
+                      <View style={styles.audioWaveProgressWrap}>
+                        <View style={styles.audioWaveform}>
+                          {[12, 20, 16, 22, 14, 18, 12, 16].map((h, wIdx) => {
+                            const barPct = ((wIdx + 1) / 8) * 100
+                            const active = playingId === msg.id && playProgress >= barPct - 10
+                            return (
+                              <View
+                                key={`mwave-${wIdx}`}
+                                style={[
+                                  styles.waveLine,
+                                  {
+                                    height: h,
+                                    backgroundColor: isCitizen
+                                      ? (active ? '#ffffff' : 'rgba(255,255,255,0.45)')
+                                      : (active ? colors.primary : '#94a3b8')
+                                  }
+                                ]}
+                              />
+                            )
+                          })}
+                        </View>
+                        <View
+                          style={[
+                            styles.audioProgressTrack,
+                            isCitizen && { backgroundColor: 'rgba(255,255,255,0.3)' }
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.audioProgressFill,
+                              {
+                                width: `${playingId === msg.id ? playProgress : 0}%`,
+                                backgroundColor: isCitizen ? '#ffffff' : colors.primary
+                              }
+                            ]}
+                          />
+                        </View>
                       </View>
                       <Text style={[styles.audioDurationText, isCitizen && styles.textWhite]}>
-                        0:{String(msg.audioDurationSeconds || 0).padStart(2, '0')}
+                        {playingId === msg.id
+                          ? `0:${String(playCurrentSec).padStart(2, '0')}`
+                          : `0:${String(msg.audioDurationSeconds || 0).padStart(2, '0')}`}
                       </Text>
                     </View>
                   ) : (
@@ -824,15 +875,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  audioWaveProgressWrap: {
+    flexDirection: 'column',
+    gap: 5,
+    minWidth: 92,
+  },
   audioWaveform: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    height: 22,
   },
   waveLine: {
     width: 3,
     backgroundColor: '#94a3b8',
     borderRadius: 2,
+  },
+  audioProgressTrack: {
+    width: '100%',
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(2, 132, 199, 0.2)',
+    overflow: 'hidden',
+  },
+  audioProgressFill: {
+    height: '100%',
+    borderRadius: 999,
   },
   audioDurationText: {
     fontSize: 11.5,
