@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import * as signalR from '@microsoft/signalr'
 import {
   Newspaper,
   AlertTriangle,
@@ -28,11 +29,7 @@ export default function NewsFeed() {
   const [urgentOnly, setUrgentOnly] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState(null)
 
-  useEffect(() => {
-    loadNews()
-  }, [selectedCanton, selectedCategory, urgentOnly])
-
-  const loadNews = async () => {
+  const loadNews = useCallback(async () => {
     try {
       const data = await fetchNewsFromApi({
         canton: selectedCanton,
@@ -45,7 +42,37 @@ export default function NewsFeed() {
     } catch {
       // Fallback a caché
     }
-  }
+  }, [selectedCanton, selectedCategory, urgentOnly])
+
+  useEffect(() => {
+    loadNews()
+
+    let connection = null
+    try {
+      const hubUrl = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+        ? `http://${window.location.hostname}:5000/chatHub`
+        : 'http://localhost:5000/chatHub'
+
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect([0, 1000, 2000, 5000])
+        .build()
+
+      connection.on('NewsUpdated', () => {
+        loadNews()
+      })
+
+      connection.start().catch(() => {})
+    } catch {
+      // Silencioso
+    }
+
+    return () => {
+      if (connection) {
+        connection.stop()
+      }
+    }
+  }, [loadNews])
 
   const getCategoryIcon = (cat) => {
     switch (cat) {

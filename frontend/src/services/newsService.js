@@ -3,74 +3,27 @@
  * Conectado con .NET 9 Web API y fallback offline con almacenamiento local
  */
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
-  ? import.meta.env.VITE_API_URL
-  : 'http://localhost:5000/api'
-
-const STORAGE_KEY = 'barrio_cantonal_news_v3'
-
-export const INITIAL_NEWS = [
-  {
-    id: 1,
-    title: 'Plan de Recarpeteo y Bacheo Intensivo en Cartago Centro',
-    summary: 'Cuadrillas municipales inician intervención en Avenida Central y Calle 4 durante toda la semana.',
-    content: 'La Dirección de Obras de la Municipalidad de Cartago informa a la ciudadanía el inicio de labores de recarpeteo asfáltico en los sectores comprendidos entre el Mercado Municipal y la Basílica de los Ángeles. Se recomienda a los conductores utilizar vías alternas hacia El Tejar y Taras.',
-    category: 'Vial',
-    canton: 'Cartago',
-    district: 'Oriental',
-    lat: 9.8644,
-    lng: -83.9194,
-    imageUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?w=800&auto=format&fit=crop&q=80',
-    videoUrl: null,
-    mediaType: 'image',
-    authorEntity: 'Municipalidad de Cartago - Obras Públicas',
-    publishedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    isUrgent: true,
-    officialLink: null
-  },
-  {
-    id: 2,
-    title: 'Mantenimiento del Sistema de Acueducto en Turrialba (Sector El Mora)',
-    summary: 'Suspensión temporal del servicio de agua potable este miércoles por reparación de tubería madre.',
-    content: 'El Acueducto Municipal de Turrialba informa que debido a trabajos de interconexión y sustitución de tubería de alta presión en el sector de El Mora y San Rafael, habrá interrupción del suministro entre las 9:00 a.m. y las 3:00 p.m. Se solicita a los vecinos recolectar agua preventiva.',
-    category: 'Agua y Alcantarillado',
-    canton: 'Turrialba',
-    district: 'Turrialba Centro',
-    lat: 9.9047,
-    lng: -83.6835,
-    imageUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80',
-    videoUrl: null,
-    mediaType: 'image',
-    authorEntity: 'Municipalidad de Turrialba - Acueductos',
-    publishedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    isUrgent: false,
-    officialLink: null
-  },
-  {
-    id: 3,
-    title: 'Habilitación de Paso en Ruta Cafetalera San Marcos - Santa María de Dota',
-    summary: 'Inspección técnica concluye remoción de escombros tras lluvias de la semana en Tarrazú.',
-    content: 'La Unidad de Gestión Vial de la Municipalidad de Tarrazú confirma la apertura normal del tránsito en la ruta que conecta San Marcos con los distritos productores de café. Cuadrillas permanecen atentas a cualquier alerta preventiva por lluvias.',
-    category: 'Vial',
-    canton: 'Tarrazú',
-    district: 'San Marcos',
-    lat: 9.6611,
-    lng: -84.0206,
-    imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800&auto=format&fit=crop&q=80',
-    videoUrl: null,
-    mediaType: 'image',
-    authorEntity: 'Municipalidad de Tarrazú - Gestión Vial',
-    publishedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-    isUrgent: false,
-    officialLink: null
+const getApiBase = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
   }
-]
+  if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:5000/api`
+  }
+  return 'http://localhost:5000/api'
+}
+
+const STORAGE_KEY = 'barrio_cantonal_news_v4'
+
+// Lista inicial en cero tras barrido de datos de prueba
+export const INITIAL_NEWS = []
 
 export const getNews = () => {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       window.localStorage.removeItem('barrio_cantonal_news')
       window.localStorage.removeItem('barrio_cantonal_news_v2')
+      window.localStorage.removeItem('barrio_cantonal_news_v3')
       const stored = window.localStorage.getItem(STORAGE_KEY)
       if (stored) {
         return JSON.parse(stored)
@@ -88,8 +41,12 @@ export const fetchNewsFromApi = async (filters = {}) => {
     if (filters.canton && filters.canton !== 'todos') query.append('canton', filters.canton)
     if (filters.category && filters.category !== 'todos') query.append('category', filters.category)
     if (filters.urgentOnly) query.append('urgentOnly', 'true')
+    query.append('_t', String(Date.now()))
 
-    const res = await fetch(`${API_BASE}/news?${query.toString()}`)
+    const res = await fetch(`${getApiBase()}/news?${query.toString()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    })
     if (res.ok) {
       const data = await res.json()
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -114,4 +71,22 @@ export const fetchNewsFromApi = async (filters = {}) => {
     list = list.filter(n => n.isUrgent)
   }
   return list
+}
+
+export const wipeNews = async () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.removeItem('barrio_cantonal_news')
+    window.localStorage.removeItem('barrio_cantonal_news_v2')
+    window.localStorage.removeItem('barrio_cantonal_news_v3')
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([]))
+  }
+  try {
+    const res = await fetch(`${getApiBase()}/news/wipe`, { method: 'POST' })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // Fallback offline
+  }
+  return { message: 'Barrido local completado' }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   StyleSheet,
   Text,
@@ -9,12 +9,14 @@ import {
   Linking,
   ActivityIndicator,
   RefreshControl,
-  Image
+  Image,
+  Platform
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as signalR from '@microsoft/signalr'
 import { colors, shadows } from '../theme/colors'
 import { getNews } from '../services/newsService'
-import { getWebMapUrl } from '../config'
+import { getWebMapUrl, DEV_PC_IP } from '../config'
 
 const CANTONES = ['todos', 'Cartago', 'Turrialba', 'Tarrazú']
 
@@ -26,11 +28,7 @@ export default function NewsFeedScreen() {
   const [urgentOnly, setUrgentOnly] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState(null)
 
-  useEffect(() => {
-    fetchNews()
-  }, [selectedCanton, urgentOnly])
-
-  const fetchNews = async () => {
+  const fetchNews = useCallback(async () => {
     try {
       setLoading(true)
       const data = await getNews({
@@ -43,7 +41,37 @@ export default function NewsFeedScreen() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedCanton, urgentOnly])
+
+  useEffect(() => {
+    fetchNews()
+
+    let connection = null
+    try {
+      const hubUrl = Platform.OS === 'web'
+        ? 'http://localhost:5000/chatHub'
+        : `http://${DEV_PC_IP}:5000/chatHub`
+
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect([0, 1000, 2000, 5000])
+        .build()
+
+      connection.on('NewsUpdated', () => {
+        fetchNews()
+      })
+
+      connection.start().catch(() => {})
+    } catch {
+      // Silencioso
+    }
+
+    return () => {
+      if (connection) {
+        connection.stop()
+      }
+    }
+  }, [fetchNews])
 
   const onRefresh = async () => {
     setRefreshing(true)

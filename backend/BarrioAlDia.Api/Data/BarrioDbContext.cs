@@ -219,52 +219,6 @@ public class BarrioDbContext : DbContext
             }
         );
 
-        // Seed Data: Noticias y Boletines Cantonales Oficiales
-        modelBuilder.Entity<NewsArticle>().HasData(
-            new NewsArticle
-            {
-                Id = 1,
-                Title = "Plan de Recarpeteo y Bacheo Intensivo en Cartago Centro",
-                Summary = "Cuadrillas municipales inician intervención en Avenida Central y Calle 4 durante toda la semana.",
-                Content = "La Dirección de Obras de la Municipalidad de Cartago informa a la ciudadanía el inicio de labores de recarpeteo asfáltico en los sectores comprendidos entre el Mercado Municipal y la Basílica de los Ángeles. Se recomienda a los conductores utilizar vías alternas hacia El Tejar y Taras.",
-                Category = "Vial",
-                Canton = "Cartago",
-                District = "Oriental",
-                AuthorEntity = "Municipalidad de Cartago - Obras Públicas",
-                PublishedAt = new DateTime(2026, 11, 20, 8, 0, 0, DateTimeKind.Utc),
-                IsUrgent = true,
-                OfficialLink = "https://muni-cartago.go.cr/comunicados/recarpeteo-nov-2026"
-            },
-            new NewsArticle
-            {
-                Id = 2,
-                Title = "Mantenimiento del Sistema de Acueducto en Turrialba (Sector El Mora)",
-                Summary = "Suspensión temporal del servicio de agua potable este miércoles por reparación de tubería madre.",
-                Content = "El Acueducto Municipal de Turrialba informa que debido a trabajos de interconexión y sustitución de tubería de alta presión en el sector de El Mora y San Rafael, habrá interrupción del suministro entre las 9:00 a.m. y las 3:00 p.m. Se solicita a los vecinos recolectar agua preventiva.",
-                Category = "Agua y Alcantarillado",
-                Canton = "Turrialba",
-                District = "Turrialba Centro",
-                AuthorEntity = "Municipalidad de Turrialba - Acueductos",
-                PublishedAt = new DateTime(2026, 11, 21, 10, 30, 0, DateTimeKind.Utc),
-                IsUrgent = false,
-                OfficialLink = "https://muni-turrialba.go.cr/avisos/acueducto-el-mora"
-            },
-            new NewsArticle
-            {
-                Id = 3,
-                Title = "Habilitación de Paso en Ruta Cafetalera San Marcos - Santa María de Dota",
-                Summary = "Inspección técnica concluye remoción de escombros tras lluvias de la semana en Tarrazú.",
-                Content = "La Unidad de Gestión Vial de la Municipalidad de Tarrazú confirma la apertura normal del tránsito en la ruta que conecta San Marcos con los distritos productores de café. Cuadrillas permanecen atentas a cualquier alerta preventiva por lluvias.",
-                Category = "Vial",
-                Canton = "Tarrazú",
-                District = "San Marcos",
-                AuthorEntity = "Municipalidad de Tarrazú - Gestión Vial",
-                PublishedAt = new DateTime(2026, 11, 22, 14, 0, 0, DateTimeKind.Utc),
-                IsUrgent = false,
-                OfficialLink = "https://munitarrazu.go.cr/obras/ruta-cafetalera"
-            }
-        );
-
         // Seed Data: Mensajes y Audios de Chat Iniciales
         modelBuilder.Entity<ChatMessage>().HasData(
             new ChatMessage

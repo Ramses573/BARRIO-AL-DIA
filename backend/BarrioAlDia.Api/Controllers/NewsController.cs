@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using BarrioAlDia.Api.Data;
 using BarrioAlDia.Api.DTOs;
+using BarrioAlDia.Api.Hubs;
 using BarrioAlDia.Api.Models;
 
 namespace BarrioAlDia.Api.Controllers;
@@ -11,19 +13,25 @@ namespace BarrioAlDia.Api.Controllers;
 public class NewsController : ControllerBase
 {
     private readonly BarrioDbContext _context;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public NewsController(BarrioDbContext context)
+    public NewsController(BarrioDbContext context, IHubContext<ChatHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // GET: api/news
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [HttpGet]
     public async Task<IActionResult> GetNews(
         [FromQuery] string? canton,
         [FromQuery] string? category,
         [FromQuery] bool? urgentOnly)
     {
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
         var query = _context.NewsArticles.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(canton) && canton != "todos")
@@ -128,6 +136,8 @@ public class NewsController : ControllerBase
         _context.NewsArticles.Add(article);
         await _context.SaveChangesAsync();
 
+        await _hubContext.Clients.All.SendAsync("NewsUpdated");
+
         return CreatedAtAction(nameof(GetNewsById), new { id = article.Id }, new NewsDto
         {
             Id = article.Id,
@@ -146,5 +156,31 @@ public class NewsController : ControllerBase
             Lat = article.Lat,
             Lng = article.Lng
         });
+    }
+
+    // POST: api/news/wipe
+    [HttpPost("wipe")]
+    public async Task<IActionResult> WipeAllNews()
+    {
+        await _context.Database.ExecuteSqlRawAsync("DELETE FROM NewsArticles");
+        await _hubContext.Clients.All.SendAsync("NewsUpdated");
+        return Ok(new { message = "Barrido de datos de Boletín Cantonal ejecutado." });
+    }
+
+    // DELETE: api/news/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteNews(int id)
+    {
+        var article = await _context.NewsArticles.FindAsync(id);
+        if (article == null)
+        {
+            return NotFound(new { message = $"Noticia con ID {id} no encontrada." });
+        }
+
+        _context.NewsArticles.Remove(article);
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("NewsUpdated");
+
+        return NoContent();
     }
 }

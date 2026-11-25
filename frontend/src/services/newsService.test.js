@@ -1,12 +1,9 @@
-import { getNews, fetchNewsFromApi } from './newsService'
+import { getNews, fetchNewsFromApi, wipeNews } from './newsService'
 
 describe('newsService', () => {
-  test('getNews retorna noticias iniciales por defecto', () => {
+  test('getNews retorna un arreglo limpio por defecto', () => {
     const list = getNews()
     expect(Array.isArray(list)).toBe(true)
-    expect(list.length).toBeGreaterThan(0)
-    expect(list[0]).toHaveProperty('title')
-    expect(list[0]).toHaveProperty('canton')
   })
 
   test('fetchNewsFromApi filtra por cantón localmente si no hay conexión', async () => {
@@ -19,8 +16,15 @@ describe('newsService', () => {
 
   test('fetchNewsFromApi filtra solo urgentes', async () => {
     const urgentNews = await fetchNewsFromApi({ urgentOnly: true })
+    expect(Array.isArray(urgentNews)).toBe(true)
     urgentNews.forEach(n => {
       expect(n.isUrgent).toBe(true)
     })
+  })
+
+  test('wipeNews ejecuta barrido limpio de noticias', async () => {
+    const res = await wipeNews()
+    expect(res).toBeDefined()
+    expect(getNews()).toEqual([])
   })
 })
