@@ -1,9 +1,50 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { apiPost } from './api'
+import { apiPost, getApiBase } from './api'
 
 const TOKEN_KEY = '@barrio_auth_token'
 const USER_KEY = '@barrio_active_user'
 const CITIZENS_KEY = '@barrio_community_citizens'
+
+export const resolveAvatarUrl = async (avatarUrl) => {
+  if (!avatarUrl || typeof avatarUrl !== 'string') return ''
+  if (
+    avatarUrl.startsWith('http://') ||
+    avatarUrl.startsWith('https://') ||
+    avatarUrl.startsWith('file://') ||
+    avatarUrl.startsWith('data:')
+  ) {
+    return avatarUrl
+  }
+  if (avatarUrl.startsWith('/')) {
+    const base = await getApiBase()
+    return `${base.replace(/\/api\/?$/, '')}${avatarUrl}`
+  }
+  return avatarUrl
+}
+
+export const uploadAvatar = async (imageUri) => {
+  if (!imageUri) return null
+  try {
+    const base = await getApiBase()
+    const formData = new FormData()
+    formData.append('file', {
+      uri: imageUri,
+      name: `avatar_${Date.now()}.jpg`,
+      type: 'image/jpeg'
+    })
+
+    const res = await fetch(`${base}/auth/upload-avatar`, {
+      method: 'POST',
+      body: formData
+    })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // Fallback offline
+  }
+  return null
+}
 
 export const DEFAULT_CITIZENS = [
   {
@@ -171,6 +212,79 @@ export const getCurrentUser = async () => {
     return stored ? JSON.parse(stored) : null
   } catch {
     return null
+  }
+}
+
+export const updateUserProfile = async (profileData) => {
+  const current = await getCurrentUser()
+  const merged = {
+    ...(current || {}),
+    ...profileData
+  }
+
+  try {
+    const base = await getApiBase()
+    const payload = {
+      id: merged.id,
+      username: merged.username,
+      fullName: merged.fullName,
+      role: merged.role,
+      entity: merged.entity,
+      email: merged.email,
+      badgeNumber: merged.badgeNumber,
+      avatarUrl: merged.avatarUrl || '',
+      phoneNumber: merged.phoneNumber || merged.phone || '',
+      canton: merged.canton || 'Cartago',
+      district: merged.district || '',
+      neighborhood: merged.neighborhood || merged.barrio || '',
+      bio: merged.bio || '',
+      workSchedule: merged.workSchedule || '',
+      emergencyContact: merged.emergencyContact || '',
+      userType: merged.userType || (merged.badgeNumber ? 'Official' : 'Citizen')
+    }
+
+    const res = await fetch(`${base}/auth/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (res.ok) {
+      const apiUser = await res.json()
+      const finalUser = {
+        ...merged,
+        ...apiUser,
+        phone: apiUser.phoneNumber || merged.phone,
+        barrio: apiUser.neighborhood || merged.barrio
+      }
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(finalUser))
+      await syncCitizenList(finalUser)
+      return { success: true, user: finalUser }
+    }
+  } catch {
+    // Fallback offline
+  }
+
+  try {
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(merged))
+    await syncCitizenList(merged)
+    return { success: true, user: merged }
+  } catch {
+    return { success: false, error: 'No se pudo actualizar el perfil.' }
+  }
+}
+
+const syncCitizenList = async (updatedUser) => {
+  try {
+    const raw = await AsyncStorage.getItem(CITIZENS_KEY)
+    const list = raw ? JSON.parse(raw) : [...DEFAULT_CITIZENS]
+    const idx = list.findIndex(c => c.username === updatedUser.username || c.id === updatedUser.id)
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...updatedUser }
+      await AsyncStorage.setItem(CITIZENS_KEY, JSON.stringify(list))
+    }
+  } catch {
+    // Ignorar
   }
 }
 

@@ -7,9 +7,11 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
 import { colors, shadows } from '../theme/colors'
 import {
   getCurrentUser,
@@ -17,13 +19,31 @@ import {
   login,
   registerCitizen,
   logout,
+  updateUserProfile,
+  uploadAvatar,
+  resolveAvatarUrl,
   DEFAULT_CITIZENS
 } from '../services/authService'
 
 export default function ProfileScreen({ navigation }) {
   const [currentUser, setCurrentUser] = useState(null)
+  const [resolvedAvatar, setResolvedAvatar] = useState('')
   const [citizens, setCitizens] = useState([])
   const [activeTab, setActiveTab] = useState('perfil') // 'perfil' | 'login' | 'register'
+  const [isEditing, setIsEditing] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+
+  // Campos de edición de perfil
+  const [editFullName, setEditFullName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editCanton, setEditCanton] = useState('Cartago')
+  const [editDistrict, setEditDistrict] = useState('')
+  const [editNeighborhood, setEditNeighborhood] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editEmergencyContact, setEditEmergencyContact] = useState('')
+  const [editWorkSchedule, setEditWorkSchedule] = useState('')
+  const [editBadgeNumber, setEditBadgeNumber] = useState('')
 
   // Formulario Login
   const [loginIdentifier, setLoginIdentifier] = useState('')
@@ -42,6 +62,22 @@ export default function ProfileScreen({ navigation }) {
     loadUserData()
   }, [])
 
+  const syncEditFields = async (u) => {
+    if (!u) return
+    setEditFullName(u.fullName || '')
+    setEditEmail(u.email || '')
+    setEditPhone(u.phoneNumber || u.phone || '')
+    setEditCanton(u.canton || 'Cartago')
+    setEditDistrict(u.district || '')
+    setEditNeighborhood(u.neighborhood || u.barrio || '')
+    setEditBio(u.bio || '')
+    setEditEmergencyContact(u.emergencyContact || '')
+    setEditWorkSchedule(u.workSchedule || '')
+    setEditBadgeNumber(u.badgeNumber || '')
+    const av = await resolveAvatarUrl(u.avatarUrl || '')
+    setResolvedAvatar(av)
+  }
+
   const loadUserData = async () => {
     const user = await getCurrentUser()
     const allCitizens = await getRegisteredCitizens()
@@ -49,11 +85,85 @@ export default function ProfileScreen({ navigation }) {
 
     if (user) {
       setCurrentUser(user)
+      await syncEditFields(user)
     } else {
       // Por defecto el vecino de Cartago
       const defaultUser = allCitizens[0] || DEFAULT_CITIZENS[0]
       setCurrentUser(defaultUser)
       await login(defaultUser.username, '123')
+      await syncEditFields(defaultUser)
+    }
+  }
+
+  const handlePickAvatar = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      if (!perm.granted) {
+        Alert.alert('Permiso requerido', 'Se requiere acceso a tu galería para elegir una foto de perfil.')
+        return
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.75
+      })
+
+      if (result.canceled || !result.assets?.[0]?.uri) return
+
+      const localUri = result.assets[0].uri
+      setResolvedAvatar(localUri)
+
+      const uploaded = await uploadAvatar(localUri)
+      const finalAvatarUrl = uploaded?.avatarUrl || localUri
+
+      const res = await updateUserProfile({
+        avatarUrl: finalAvatarUrl
+      })
+      if (res.success) {
+        setCurrentUser(res.user)
+        const resolved = await resolveAvatarUrl(res.user.avatarUrl || finalAvatarUrl)
+        setResolvedAvatar(resolved)
+        Alert.alert('Foto actualizada', 'Tu foto de perfil se guardó correctamente.')
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo actualizar la foto de perfil.')
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (!editFullName.trim()) {
+      Alert.alert('Campo requerido', 'El nombre completo es obligatorio.')
+      return
+    }
+    setSavingProfile(true)
+    try {
+      const res = await updateUserProfile({
+        fullName: editFullName.trim(),
+        email: editEmail.trim(),
+        phoneNumber: editPhone.trim(),
+        phone: editPhone.trim(),
+        canton: editCanton.trim() || 'Cartago',
+        district: editDistrict.trim(),
+        neighborhood: editNeighborhood.trim(),
+        barrio: editNeighborhood.trim(),
+        bio: editBio.trim(),
+        emergencyContact: editEmergencyContact.trim(),
+        workSchedule: editWorkSchedule.trim(),
+        badgeNumber: editBadgeNumber.trim()
+      })
+      if (res.success) {
+        setCurrentUser(res.user)
+        const updated = await getRegisteredCitizens()
+        setCitizens(updated)
+        setIsEditing(false)
+        Alert.alert('Perfil actualizado', 'Tus datos personales se guardaron correctamente.')
+      } else {
+        Alert.alert('Error', res.error || 'No se pudo actualizar el perfil.')
+      }
+    } finally {
+      setSavingProfile(false)
     }
   }
 
@@ -61,6 +171,8 @@ export default function ProfileScreen({ navigation }) {
     const res = await login(citizen.username, citizen.password || '123')
     if (res.success) {
       setCurrentUser(res.user)
+      await syncEditFields(res.user)
+      setIsEditing(false)
       Alert.alert('Perfil activado', `Iniciaste como ${res.user.fullName} (${res.user.canton}). Los próximos reportes se firmarán con tu nombre.`)
       setActiveTab('perfil')
     } else {
@@ -188,39 +300,202 @@ export default function ProfileScreen({ navigation }) {
         <View>
           {currentUser ? (
             <View style={styles.profileCard}>
-              <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={42} color="#ffffff" />
-              </View>
+              <TouchableOpacity
+                style={styles.avatarCircle}
+                onPress={handlePickAvatar}
+                activeOpacity={0.8}
+              >
+                {resolvedAvatar ? (
+                  <Image source={{ uri: resolvedAvatar }} style={styles.avatarImg} />
+                ) : (
+                  <Ionicons name="person" size={42} color="#ffffff" />
+                )}
+                <View style={styles.avatarCamBadge}>
+                  <Ionicons name="camera" size={14} color="#ffffff" />
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.avatarHint}>Toca la foto para cambiarla</Text>
               <Text style={styles.profileName}>{currentUser.fullName}</Text>
               <Text style={styles.profileRole}>{currentUser.role || 'Vecino Comunitario'}</Text>
-              
+
               <View style={styles.badgeLocation}>
                 <Ionicons name="location" size={14} color={colors.primary} />
                 <Text style={styles.badgeLocationText}>
-                  {currentUser.barrio || 'Barrio El Carmen'}, {currentUser.canton || 'Cartago'}
+                  {currentUser.neighborhood || currentUser.barrio || 'Centro'}
+                  {currentUser.district ? `, ${currentUser.district}` : ''}
+                  {`, ${currentUser.canton || 'Cartago'}`}
                 </Text>
               </View>
 
-              <View style={styles.infoGrid}>
-                <View style={styles.infoItem}>
-                  <Text style={styles.infoLabel}>Usuario:</Text>
-                  <Text style={styles.infoValue}>{currentUser.username || 'vecino'}</Text>
+              {isEditing ? (
+                <View style={styles.editFormWrap}>
+                  <Text style={styles.editFieldLabel}>Nombre y Apellidos</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editFullName}
+                    onChangeText={setEditFullName}
+                    placeholder="Ej. Ramsés Solano Calvo"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Correo Electrónico</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editEmail}
+                    onChangeText={setEditEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholder="correo@ejemplo.com"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Teléfono / WhatsApp</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editPhone}
+                    onChangeText={setEditPhone}
+                    keyboardType="phone-pad"
+                    placeholder="8888-0000"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Cantón</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editCanton}
+                    onChangeText={setEditCanton}
+                    placeholder="Cartago / Turrialba / Tarrazú"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Distrito</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editDistrict}
+                    onChangeText={setEditDistrict}
+                    placeholder="Ej. Oriental / El Carmen"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Barrio / Comunidad</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editNeighborhood}
+                    onChangeText={setEditNeighborhood}
+                    placeholder="Ej. Barrio Los Ángeles"
+                  />
+
+                  <Text style={styles.editFieldLabel}>Biografía / Rol Comunitario</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editBio}
+                    onChangeText={setEditBio}
+                    placeholder="Ej. Líder comunal / Comité de Seguridad"
+                  />
+
+                  {currentUser.badgeNumber || currentUser.userType === 'Official' ? (
+                    <>
+                      <Text style={styles.editFieldLabel}>Placa / Folio Institucional</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editBadgeNumber}
+                        onChangeText={setEditBadgeNumber}
+                        placeholder="Ej. MC-4921"
+                      />
+                      <Text style={styles.editFieldLabel}>Turno / Horario de Atención</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editWorkSchedule}
+                        onChangeText={setEditWorkSchedule}
+                        placeholder="Ej. L-V 7:30 a.m. - 4:00 p.m."
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.editFieldLabel}>Contacto de Emergencia (Opcional)</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editEmergencyContact}
+                        onChangeText={setEditEmergencyContact}
+                        placeholder="Ej. Ana Calvo - 8888-1111"
+                      />
+                    </>
+                  )}
+
+                  <View style={styles.editActionsRow}>
+                    <TouchableOpacity
+                      style={styles.btnCancelEdit}
+                      onPress={() => {
+                        syncEditFields(currentUser)
+                        setIsEditing(false)
+                      }}
+                    >
+                      <Text style={styles.btnCancelEditText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.btnSaveEdit}
+                      onPress={handleSaveProfile}
+                      disabled={savingProfile}
+                    >
+                      {savingProfile ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <Text style={styles.btnSaveEditText}>Guardar Datos</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={styles.infoItem}>
-                  <Text style={styles.infoLabel}>Correo:</Text>
-                  <Text style={styles.infoValue}>{currentUser.email || 'No registrado'}</Text>
-                </View>
-                <View style={styles.infoItem}>
-                  <Text style={styles.infoLabel}>Teléfono:</Text>
-                  <Text style={styles.infoValue}>{currentUser.phone || '8888-0000'}</Text>
-                </View>
-                <View style={styles.infoItem}>
-                  <Text style={styles.infoLabel}>Visibilidad:</Text>
-                  <Text style={[styles.infoValue, { color: colors.primary, fontWeight: '800' }]}>
-                    Firma pública en reportes
-                  </Text>
-                </View>
-              </View>
+              ) : (
+                <>
+                  <View style={styles.infoGrid}>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoLabel}>Usuario:</Text>
+                      <Text style={styles.infoValue}>{currentUser.username || 'vecino'}</Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoLabel}>Correo:</Text>
+                      <Text style={styles.infoValue}>{currentUser.email || 'No registrado'}</Text>
+                    </View>
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoLabel}>Teléfono:</Text>
+                      <Text style={styles.infoValue}>{currentUser.phoneNumber || currentUser.phone || '8888-0000'}</Text>
+                    </View>
+                    {currentUser.bio ? (
+                      <View style={styles.infoItem}>
+                        <Text style={styles.infoLabel}>Biografía:</Text>
+                        <Text style={[styles.infoValue, { flex: 1, textAlign: 'right', marginLeft: 12 }]}>
+                          {currentUser.bio}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {currentUser.workSchedule ? (
+                      <View style={styles.infoItem}>
+                        <Text style={styles.infoLabel}>Horario:</Text>
+                        <Text style={styles.infoValue}>{currentUser.workSchedule}</Text>
+                      </View>
+                    ) : null}
+                    {currentUser.emergencyContact ? (
+                      <View style={styles.infoItem}>
+                        <Text style={styles.infoLabel}>Emergencia:</Text>
+                        <Text style={styles.infoValue}>{currentUser.emergencyContact}</Text>
+                      </View>
+                    ) : null}
+                    <View style={styles.infoItem}>
+                      <Text style={styles.infoLabel}>Visibilidad:</Text>
+                      <Text style={[styles.infoValue, { color: colors.primary, fontWeight: '800' }]}>
+                        Firma pública en reportes
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnEditProfile}
+                    onPress={() => {
+                      syncEditFields(currentUser)
+                      setIsEditing(true)
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#ffffff" />
+                    <Text style={styles.btnEditProfileText}>Personalizar Datos y Foto</Text>
+                  </TouchableOpacity>
+                </>
+              )}
 
               <View style={styles.helpNoteBox}>
                 <Ionicons name="shield-checkmark" size={18} color={colors.primary} />
@@ -499,13 +774,104 @@ const styles = StyleSheet.create({
     ...shadows.sm
   },
   avatarCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12
+    marginBottom: 6,
+    position: 'relative',
+  },
+  avatarImg: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
+  avatarCamBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#0284c7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  avatarHint: {
+    fontSize: 11,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  btnEditProfile: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingVertical: 11,
+    borderRadius: 10,
+    marginTop: 14,
+  },
+  btnEditProfileText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 13.5,
+  },
+  editFormWrap: {
+    width: '100%',
+    gap: 8,
+    marginTop: 6,
+  },
+  editFieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+    marginTop: 4,
+  },
+  editInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13.5,
+    color: '#1e293b',
+  },
+  editActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  btnCancelEdit: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+  },
+  btnCancelEditText: {
+    color: '#475569',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  btnSaveEdit: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  btnSaveEditText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 13,
   },
   profileName: {
     fontSize: 19,

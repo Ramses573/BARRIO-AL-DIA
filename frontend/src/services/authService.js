@@ -119,6 +119,45 @@ export const register = async (officialData) => {
   return { success: true, official: newOfficial, token: mockToken }
 }
 
+export const getApiOrigin = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:5000`
+  }
+  return 'http://localhost:5000'
+}
+
+export const resolveAvatarUrl = (avatarUrl) => {
+  if (!avatarUrl || typeof avatarUrl !== 'string') return ''
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:') || avatarUrl.startsWith('blob:')) {
+    return avatarUrl
+  }
+  if (avatarUrl.startsWith('/')) {
+    return `${getApiOrigin()}${avatarUrl}`
+  }
+  return avatarUrl
+}
+
+export const uploadAvatar = async (file) => {
+  if (!file) return null
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${getApiOrigin()}/api/auth/upload-avatar`, {
+      method: 'POST',
+      body: formData
+    })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // Fallback offline
+  }
+  return null
+}
+
 export const updateOfficialProfile = async (profileData) => {
   try {
     const res = await fetch(`${API_BASE}/auth/profile`, {

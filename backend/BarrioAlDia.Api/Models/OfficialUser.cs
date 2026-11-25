@@ -33,6 +33,33 @@ public class OfficialUser
     [MaxLength(50)]
     public string BadgeNumber { get; set; } = string.Empty;
 
+    [MaxLength(300)]
+    public string? AvatarUrl { get; set; }
+
+    [MaxLength(30)]
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    [MaxLength(60)]
+    public string Canton { get; set; } = string.Empty;
+
+    [MaxLength(80)]
+    public string District { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string Neighborhood { get; set; } = string.Empty;
+
+    [MaxLength(300)]
+    public string Bio { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string WorkSchedule { get; set; } = string.Empty;
+
+    [MaxLength(120)]
+    public string EmergencyContact { get; set; } = string.Empty;
+
+    [MaxLength(30)]
+    public string UserType { get; set; } = "Official";
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search, Newspaper } from 'lucide-react'
 import { THEMES, getCurrentTheme, applyTheme } from '../services/themeService'
-import { isAuthenticated, getCurrentOfficial, logout } from '../services/authService'
+import { isAuthenticated, getCurrentOfficial, logout, resolveAvatarUrl } from '../services/authService'
 import ProfileModal from './ProfileModal'
 import './Navbar.css'
 
@@ -100,7 +100,15 @@ export default function Navbar() {
                 onClick={() => setShowProfileModal(true)}
                 title={`Funcionario activo: ${official?.fullName || official?.username} - Clic para personalizar perfil`}
               >
-                <UserCheck size={14} className="text-green" />
+                {official?.avatarUrl ? (
+                  <img
+                    src={resolveAvatarUrl(official.avatarUrl)}
+                    alt={official.fullName || official.username}
+                    style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <UserCheck size={14} className="text-green" />
+                )}
                 <span className="official-name-abbr">{official?.fullName?.split(' ')[0] || official?.username}</span>
                 <Settings size={12} className="official-gear-icon" />
               </button>

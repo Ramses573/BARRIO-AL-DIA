@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import {
   User,
   Building2,
@@ -9,24 +9,64 @@ import {
   Save,
   X,
   ShieldCheck,
-  KeyRound
+  KeyRound,
+  Camera,
+  Phone,
+  MapPin,
+  Clock,
+  FileText
 } from 'lucide-react'
-import { updateOfficialProfile } from '../services/authService'
+import { updateOfficialProfile, uploadAvatar, resolveAvatarUrl } from '../services/authService'
 import { useToast } from './Toast'
 import './ProfileModal.css'
 
 export default function ProfileModal({ official, isOpen, onClose, onProfileUpdated }) {
   const { addToast } = useToast()
+  const fileInputRef = useRef(null)
 
   const [fullName, setFullName] = useState(official?.fullName || '')
   const [role, setRole] = useState(official?.role || '')
   const [entity, setEntity] = useState(official?.entity || 'Municipalidad de Cartago')
   const [email, setEmail] = useState(official?.email || '')
   const [badgeNumber, setBadgeNumber] = useState(official?.badgeNumber || '')
+  const [phoneNumber, setPhoneNumber] = useState(official?.phoneNumber || '')
+  const [canton, setCanton] = useState(official?.canton || 'Cartago')
+  const [district, setDistrict] = useState(official?.district || '')
+  const [workSchedule, setWorkSchedule] = useState(official?.workSchedule || '')
+  const [bio, setBio] = useState(official?.bio || '')
+  const [avatarUrl, setAvatarUrl] = useState(official?.avatarUrl || '')
+  const [avatarPreview, setAvatarPreview] = useState(resolveAvatarUrl(official?.avatarUrl || ''))
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Vista previa inmediata
+    const localUrl = URL.createObjectURL(file)
+    setAvatarPreview(localUrl)
+    setUploadingPhoto(true)
+
+    const uploaded = await uploadAvatar(file)
+    setUploadingPhoto(false)
+
+    if (uploaded?.avatarUrl) {
+      setAvatarUrl(uploaded.avatarUrl)
+      addToast('Foto de perfil subida correctamente.', 'success')
+    } else {
+      // Fallback DataURL para modo offline
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result)
+      }
+      reader.readAsDataURL(file)
+      addToast('Foto cargada localmente.', 'info')
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -40,7 +80,14 @@ export default function ProfileModal({ official, isOpen, onClose, onProfileUpdat
         role: role.trim(),
         entity,
         email: email.trim(),
-        badgeNumber: badgeNumber.trim()
+        badgeNumber: badgeNumber.trim(),
+        phoneNumber: phoneNumber.trim(),
+        canton,
+        district: district.trim(),
+        workSchedule: workSchedule.trim(),
+        bio: bio.trim(),
+        avatarUrl: avatarUrl || official?.avatarUrl || '',
+        userType: 'Official'
       }
 
       if (newPassword.trim()) {
@@ -86,9 +133,37 @@ export default function ProfileModal({ official, isOpen, onClose, onProfileUpdat
         </div>
 
         <form onSubmit={handleSubmit} className="profile-modal-form">
-          <div className="profile-badge-summary">
-            <BadgeCheck size={16} className="text-blue" />
-            <span>Código de Placa / Identificación: <strong>{badgeNumber || 'MC-4921'}</strong></span>
+          {/* Foto de Perfil y Resumen */}
+          <div className="profile-avatar-upload-row">
+            <div
+              className="profile-avatar-circle"
+              onClick={() => fileInputRef.current?.click()}
+              title="Cambiar foto de perfil"
+            >
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Foto de perfil" className="profile-avatar-img" />
+              ) : (
+                <User size={28} className="text-blue" />
+              )}
+              <span className="profile-avatar-cam-badge">
+                <Camera size={12} />
+              </span>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden-file-input"
+              onChange={handleAvatarChange}
+            />
+            <div className="profile-avatar-meta">
+              <strong>{fullName || official?.username}</strong>
+              <span>{uploadingPhoto ? 'Subiendo foto...' : 'Clic en el círculo para cambiar foto de perfil'}</span>
+              <div className="profile-badge-summary">
+                <BadgeCheck size={14} className="text-blue" />
+                <span>Placa: <strong>{badgeNumber || 'MC-4921'}</strong></span>
+              </div>
+            </div>
           </div>
 
           <div className="profile-input-group">
@@ -165,6 +240,78 @@ export default function ProfileModal({ official, isOpen, onClose, onProfileUpdat
                 placeholder="Ej. MC-4921"
               />
             </div>
+          </div>
+
+          <div className="profile-form-row">
+            <div className="profile-input-group">
+              <label htmlFor="prof-phone">
+                <Phone size={14} className="inline-icon text-blue" /> Teléfono / WhatsApp
+              </label>
+              <input
+                id="prof-phone"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Ej. 8888-1234"
+              />
+            </div>
+
+            <div className="profile-input-group">
+              <label htmlFor="prof-schedule">
+                <Clock size={14} className="inline-icon text-blue" /> Turno / Horario
+              </label>
+              <input
+                id="prof-schedule"
+                type="text"
+                value={workSchedule}
+                onChange={(e) => setWorkSchedule(e.target.value)}
+                placeholder="Ej. L-V 7:30 a.m. - 4:00 p.m."
+              />
+            </div>
+          </div>
+
+          <div className="profile-form-row">
+            <div className="profile-input-group">
+              <label htmlFor="prof-canton">
+                <MapPin size={14} className="inline-icon text-blue" /> Cantón Asignado
+              </label>
+              <select
+                id="prof-canton"
+                value={canton}
+                onChange={(e) => setCanton(e.target.value)}
+                className="profile-select"
+              >
+                <option value="Cartago">Cartago</option>
+                <option value="Turrialba">Turrialba</option>
+                <option value="Tarrazú">Tarrazú</option>
+              </select>
+            </div>
+
+            <div className="profile-input-group">
+              <label htmlFor="prof-district">
+                <MapPin size={14} className="inline-icon text-blue" /> Distrito / Sector
+              </label>
+              <input
+                id="prof-district"
+                type="text"
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                placeholder="Ej. Oriental / El Carmen"
+              />
+            </div>
+          </div>
+
+          <div className="profile-input-group">
+            <label htmlFor="prof-bio">
+              <FileText size={14} className="inline-icon text-blue" /> Biografía / Especialidad Operativa
+            </label>
+            <input
+              id="prof-bio"
+              type="text"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Ej. Coordinación de cuadrillas eléctricas y respuesta rápida"
+            />
           </div>
 
           <div className="profile-password-section">

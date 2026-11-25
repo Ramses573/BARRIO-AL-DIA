@@ -76,6 +76,12 @@ if (!Directory.Exists(audiosPath))
     Directory.CreateDirectory(audiosPath);
 }
 
+var avatarsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
+if (!Directory.Exists(avatarsPath))
+{
+    Directory.CreateDirectory(avatarsPath);
+}
+
 var contentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 contentTypeProvider.Mappings[".m4a"] = "audio/mp4";
 contentTypeProvider.Mappings[".mp4"] = "audio/mp4";
@@ -134,6 +140,17 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.EnsureCreated();
+        db.Database.ExecuteSqlRaw(@"
+            IF COL_LENGTH('OfficialUsers', 'AvatarUrl') IS NULL ALTER TABLE OfficialUsers ADD AvatarUrl NVARCHAR(300) NULL;
+            IF COL_LENGTH('OfficialUsers', 'PhoneNumber') IS NULL ALTER TABLE OfficialUsers ADD PhoneNumber NVARCHAR(30) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'Canton') IS NULL ALTER TABLE OfficialUsers ADD Canton NVARCHAR(60) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'District') IS NULL ALTER TABLE OfficialUsers ADD District NVARCHAR(80) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'Neighborhood') IS NULL ALTER TABLE OfficialUsers ADD Neighborhood NVARCHAR(100) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'Bio') IS NULL ALTER TABLE OfficialUsers ADD Bio NVARCHAR(300) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'WorkSchedule') IS NULL ALTER TABLE OfficialUsers ADD WorkSchedule NVARCHAR(100) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'EmergencyContact') IS NULL ALTER TABLE OfficialUsers ADD EmergencyContact NVARCHAR(120) NOT NULL DEFAULT '';
+            IF COL_LENGTH('OfficialUsers', 'UserType') IS NULL ALTER TABLE OfficialUsers ADD UserType NVARCHAR(30) NOT NULL DEFAULT 'Official';
+        ");
     }
     catch (Exception ex)
     {
