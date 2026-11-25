@@ -46,6 +46,11 @@ if errorlevel 1 (
 )
 
 echo [4/6] Iniciando Backend .NET 9 API (Puerto 5000 en 0.0.0.0)...
+if not exist "backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll" (
+    echo [INFO] Compilando Backend .NET 9...
+    dotnet build backend\BarrioAlDia.Api\BarrioAlDia.Api.csproj -c Debug
+)
+set ASPNETCORE_ENVIRONMENT=Development
 start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll --urls "http://0.0.0.0:5000" > backend.log 2>&1
 
 echo [INFO] Calentando Base de Datos y canal de chat en tiempo real...
