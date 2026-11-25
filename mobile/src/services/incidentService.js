@@ -1,90 +1,26 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { apiGet, apiPost } from './api'
 
-const INCIDENTS_STORAGE_KEY = '@barrio_incidents_cache'
+const INCIDENTS_STORAGE_KEY = '@barrio_incidents_v4'
 
-export const INITIAL_INCIDENTS = [
-  {
-    id: 1,
-    ticketCode: 'TKT-CART-5821',
-    title: 'Inundación en Calle Real del Tejar',
-    category: 'Inundación',
-    location: 'El Tejar de El Guarco, 200 m oeste del puente',
-    lat: 9.8521,
-    lng: -83.9312,
-    date: '2026-11-20',
-    status: 'En Proceso',
-    priority: 'Alta',
-    urgency: 'Alta',
-    description: 'Acumulación severa de agua por colapso de alcantarillado pluvial. Tránsito cerrado para vehículos bajos.',
-    photo: null,
-    photos: [],
-    video: null,
-    isAnonymous: false,
-    reporterName: 'Ramsés Solano Calvo',
-    timeline: [
-      { stage: 'Recibido', date: '2026-11-20 08:30', note: 'Notificación ingresada al sistema de despacho cantonal' },
-      { stage: 'En Evaluación', date: '2026-11-20 09:15', note: 'Asignado a la Unidad Técnica de Drenajes de Cartago' },
-      { stage: 'Cuadrilla Despachada', date: '2026-11-20 10:00', note: 'Cuadrilla #3 en camino con equipo de desobstrucción' }
-    ]
-  },
-  {
-    id: 2,
-    ticketCode: 'TKT-TURR-2144',
-    title: 'Hueco y Hundimiento en Ruta Principal a La Suiza',
-    category: 'Calles dañadas',
-    location: 'Turrialba, 500 m sur de la Universidad de Costa Rica',
-    lat: 9.9042,
-    lng: -83.6781,
-    date: '2026-11-21',
-    status: 'Pendiente',
-    priority: 'Media',
-    urgency: 'Media',
-    description: 'Desprendimiento de carpeta asfáltica de aprox 1.5 metros. Representa riesgo para motociclistas de noche.',
-    photo: null,
-    photos: [],
-    video: null,
-    isAnonymous: false,
-    reporterName: 'María Gómez Jiménez',
-    timeline: [
-      { stage: 'Recibido', date: '2026-11-21 14:10', note: 'Reporte registrado y validado por vecino' }
-    ]
-  },
-  {
-    id: 3,
-    ticketCode: 'TKT-TARZ-9012',
-    title: 'Poste Inclinado tras Tormenta en San Marcos',
-    category: 'Poste sin luz',
-    location: 'San Marcos de Tarrazú, Barrio San Lorenzo',
-    lat: 9.6610,
-    lng: -84.0201,
-    date: '2026-11-22',
-    status: 'Resuelto',
-    priority: 'Baja',
-    urgency: 'Baja',
-    description: 'Poste de tendido eléctrico estabilizado y luminaria LED reemplazada con éxito.',
-    photo: null,
-    photos: [],
-    video: null,
-    isAnonymous: true,
-    reporterName: null,
-    timeline: [
-      { stage: 'Recibido', date: '2026-11-22 07:00', note: 'Ingreso del reporte anónimo' },
-      { stage: 'En Evaluación', date: '2026-11-22 08:30', note: 'Inspección técnica realizada por ICE / CoopeSantos' },
-      { stage: 'Cuadrilla Despachada', date: '2026-11-22 10:15', note: 'Cuadrilla en sitio' },
-      { stage: 'Resuelto', date: '2026-11-22 12:45', note: 'Estructura enderezada y luminaria operativa' }
-    ]
-  }
-]
+// Lista inicial en cero tras barrido completo de datos semilla
+export const INITIAL_INCIDENTS = []
+
 
 /**
  * Carga incidencias de AsyncStorage o API
  */
 export const getIncidents = async (filters = {}) => {
+  try {
+    await AsyncStorage.removeItem('@barrio_incidents_cache')
+  } catch {
+    // Ignorar
+  }
+
   // Intentar API
   try {
     const apiData = await apiGet('/incidents', filters)
-    if (Array.isArray(apiData) && apiData.length > 0) {
+    if (Array.isArray(apiData)) {
       await AsyncStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(apiData))
       return apiData
     }
@@ -123,7 +59,6 @@ export const getIncidents = async (filters = {}) => {
 export const getAllTrackableTickets = async () => {
   const all = await getIncidents()
   const map = new Map()
-  INITIAL_INCIDENTS.forEach(i => map.set((i.ticketCode || String(i.id)).toUpperCase(), i))
   all.forEach(i => map.set((i.ticketCode || String(i.id)).toUpperCase(), i))
   return Array.from(map.values())
 }

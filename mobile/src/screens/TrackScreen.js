@@ -25,7 +25,7 @@ const STAGES = [
 ]
 
 export default function TrackScreen({ route, navigation }) {
-  const initialCode = route?.params?.code || 'TKT-CART-5821'
+  const initialCode = route?.params?.code || ''
   const [ticketInput, setTicketInput] = useState(initialCode)
   const [incident, setIncident] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -40,11 +40,15 @@ export default function TrackScreen({ route, navigation }) {
     try {
       const list = await getAllTrackableTickets()
       setAllTickets(list)
-      const codeToSearch = initialCode || (list[0] ? list[0].ticketCode : 'TKT-CART-5821')
+      const codeToSearch = initialCode || (list[0] ? list[0].ticketCode : '')
       setTicketInput(codeToSearch)
-      searchTicket(codeToSearch)
+      if (codeToSearch) {
+        searchTicket(codeToSearch)
+      }
     } catch {
-      searchTicket(initialCode)
+      if (initialCode) {
+        searchTicket(initialCode)
+      }
     }
   }
 

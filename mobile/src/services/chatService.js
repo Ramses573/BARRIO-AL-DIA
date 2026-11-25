@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { apiGet, apiPost, getApiBase } from './api'
 
-const CHAT_STORAGE_PREFIX = '@barrio_chat_ticket_'
+const CHAT_STORAGE_PREFIX = '@barrio_chat_v4_ticket_'
 
 export const resolveAudioUrl = async (content) => {
   if (!content || typeof content !== 'string') return ''
@@ -48,43 +48,22 @@ export const uploadChatAudio = async (fileUri, ticketCode, durationSeconds) => {
   return null
 }
 
-const INITIAL_DEMO_MESSAGES = {
-  'TKT-CART-5821': [
-    {
-      id: 1,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'María Luisa Monge',
-      senderRole: 'Ciudadano',
-      messageType: 'Text',
-      content: 'Buenas tardes, ¿saben si la cuadrilla vendrá hoy a revisar el poste sin luz?',
-      sentAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      isRead: true
-    },
-    {
-      id: 2,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'Ing. Carlos Méndez',
-      senderRole: 'Cuadrilla Municipal',
-      messageType: 'Text',
-      content: 'Hola doña María Luisa. La cuadrilla de electrificación municipal está programada para las 4:30 PM en su sector.',
-      sentAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
-      isRead: true
-    },
-    {
-      id: 3,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'Cuadrilla #2 Cartago',
-      senderRole: 'Cuadrilla Municipal',
-      messageType: 'Audio',
-      content: '',
-      audioDurationSeconds: 8,
-      sentAt: new Date(Date.now() - 1800000).toISOString(),
-      isRead: true
+const INITIAL_DEMO_MESSAGES = {}
+
+const cleanLegacyMobileChat = async () => {
+  try {
+    const keys = await AsyncStorage.getAllKeys()
+    const legacy = keys.filter(k => k.startsWith('@barrio_chat_ticket_'))
+    if (legacy.length > 0) {
+      await AsyncStorage.multiRemove(legacy)
     }
-  ]
+  } catch {
+    // Ignorar
+  }
 }
 
 export const getMessagesByTicket = async (ticketCode) => {
+  await cleanLegacyMobileChat()
   const code = (ticketCode || 'GENERAL').trim().toUpperCase()
 
   // 1. Intentar backend .NET 9
@@ -104,18 +83,7 @@ export const getMessagesByTicket = async (ticketCode) => {
     if (stored) {
       return JSON.parse(stored)
     }
-    return INITIAL_DEMO_MESSAGES[code] || [
-      {
-        id: 999,
-        ticketCode: code,
-        senderName: 'Asistencia Municipal',
-        senderRole: 'Sistema',
-        messageType: 'Text',
-        content: `Canal de asistencia cantonal activado para el ticket ${code}. Puedes escribirnos o enviarnos una nota de voz.`,
-        sentAt: '2026-11-24T00:00:00.000Z',
-        isRead: true
-      }
-    ]
+    return INITIAL_DEMO_MESSAGES[code] || []
   } catch {
     return []
   }

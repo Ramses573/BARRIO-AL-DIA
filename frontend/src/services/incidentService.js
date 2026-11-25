@@ -63,70 +63,11 @@ export const getIncidents = () => {
   return [...memoryIncidents]
 }
 
-export const CANTON_SEED_TICKETS = [
-  {
-    id: 1,
-    ticketCode: 'TKT-CART-5821',
-    title: 'Inundación en Calle Real del Tejar',
-    category: 'Inundación',
-    location: 'El Tejar de El Guarco, Cartago (200 m oeste del puente)',
-    lat: 9.8521,
-    lng: -83.9312,
-    date: '2026-11-20',
-    status: 'En proceso',
-    priority: 'Alta',
-    urgency: 'Alta',
-    description: 'Acumulación severa de agua por colapso de alcantarillado pluvial. Tránsito cerrado para vehículos bajos.',
-    photo: 'https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80',
-    photos: ['https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80'],
-    isAnonymous: false,
-    reporterName: 'Ramsés Solano Calvo (Vecino Comunitario)',
-    institutionalNote: 'Cuadrilla municipal #3 de Cartago con cisterna y equipo succionador en el sitio.'
-  },
-  {
-    id: 2,
-    ticketCode: 'TKT-TURR-2144',
-    title: 'Hueco y Hundimiento en Ruta Principal a La Suiza',
-    category: 'Calles dañadas',
-    location: 'Turrialba, 500 m sur de la Universidad de Costa Rica',
-    lat: 9.9042,
-    lng: -83.6781,
-    date: '2026-11-21',
-    status: 'Pendiente',
-    priority: 'Media',
-    urgency: 'Media',
-    description: 'Desprendimiento de carpeta asfáltica de aprox 1.5 metros. Representa riesgo para motociclistas de noche.',
-    photo: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
-    photos: ['https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80'],
-    isAnonymous: false,
-    reporterName: 'María Gómez Jiménez (Vecina Comunitaria)',
-    institutionalNote: 'Inspección preliminar de ingeniería vial programada.'
-  },
-  {
-    id: 3,
-    ticketCode: 'TKT-TARZ-9012',
-    title: 'Poste Inclinado tras Tormenta en San Marcos',
-    category: 'Poste sin luz',
-    location: 'San Marcos de Tarrazú, Barrio San Lorenzo',
-    lat: 9.6610,
-    lng: -84.0201,
-    date: '2026-11-22',
-    status: 'Resuelto',
-    priority: 'Baja',
-    urgency: 'Baja',
-    description: 'Poste de tendido eléctrico estabilizado y luminaria LED reemplazada con éxito.',
-    photo: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80',
-    photos: ['https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80'],
-    isAnonymous: true,
-    reporterName: null,
-    institutionalNote: 'Obras concluidas por brigada conjunta municipal y cooperativa eléctrica.'
-  }
-]
+export const CANTON_SEED_TICKETS = []
 
 export const getAllTrackableTickets = () => {
   const local = getIncidents()
   const map = new Map()
-  CANTON_SEED_TICKETS.forEach(t => map.set((t.ticketCode || String(t.id)).toUpperCase(), t))
   local.forEach(t => map.set((t.ticketCode || String(t.id)).toUpperCase(), t))
   return Array.from(map.values())
 }

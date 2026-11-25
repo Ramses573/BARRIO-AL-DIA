@@ -13,45 +13,26 @@ export const getApiBase = () => {
   return 'http://localhost:5000/api'
 }
 
-const CHAT_STORAGE_PREFIX = 'barrio_chat_ticket_'
+const CHAT_STORAGE_PREFIX = 'barrio_chat_v4_ticket_'
 
-const INITIAL_DEMO_MESSAGES = {
-  'TKT-CART-5821': [
-    {
-      id: 1,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'María Luisa Monge',
-      senderRole: 'Ciudadano',
-      messageType: 'Text',
-      content: 'Buenas tardes, ¿saben si la cuadrilla vendrá hoy a revisar el poste sin luz?',
-      sentAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      isRead: true
-    },
-    {
-      id: 2,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'Ing. Carlos Méndez',
-      senderRole: 'Cuadrilla Municipal',
-      messageType: 'Text',
-      content: 'Hola doña María Luisa. La cuadrilla de electrificación municipal está programada para las 4:30 PM en su sector.',
-      sentAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
-      isRead: true
-    },
-    {
-      id: 3,
-      ticketCode: 'TKT-CART-5821',
-      senderName: 'Cuadrilla #2 Cartago',
-      senderRole: 'Cuadrilla Municipal',
-      messageType: 'Audio',
-      content: 'data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcAA...',
-      audioDurationSeconds: 8,
-      sentAt: new Date(Date.now() - 1800000).toISOString(),
-      isRead: true
+const INITIAL_DEMO_MESSAGES = {}
+
+const cleanLegacyChatStorage = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      Object.keys(window.localStorage).forEach(k => {
+        if (k.startsWith('barrio_chat_ticket_')) {
+          window.localStorage.removeItem(k)
+        }
+      })
+    } catch {
+      // Ignorar
     }
-  ]
+  }
 }
 
 export const getMessagesByTicket = async (ticketCode) => {
+  cleanLegacyChatStorage()
   const code = (ticketCode || 'GENERAL').trim().toUpperCase()
   const apiBase = getApiBase()
 
@@ -63,12 +44,10 @@ export const getMessagesByTicket = async (ticketCode) => {
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data)) {
-        if (data.length > 0 || !INITIAL_DEMO_MESSAGES[code]) {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
-          }
-          return data
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
         }
+        return data
       }
     }
   } catch {
@@ -87,18 +66,24 @@ export const getMessagesByTicket = async (ticketCode) => {
     }
   }
 
-  return INITIAL_DEMO_MESSAGES[code] || [
-    {
-      id: 1000,
-      ticketCode: code,
-      senderName: 'Sistema Municipal',
-      senderRole: 'Soporte Municipal',
-      messageType: 'Text',
-      content: `Canal de asistencia activado para el ticket ${code}. Podés escribirnos o enviarnos una nota de voz si necesitás indicar referencias adicionales.`,
-      sentAt: '2026-11-24T00:00:00.000Z',
-      isRead: true
-    }
-  ]
+  return INITIAL_DEMO_MESSAGES[code] || []
+}
+
+export const wipeChats = async () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    Object.keys(window.localStorage).forEach(k => {
+      if (k.startsWith('barrio_chat_')) {
+        window.localStorage.removeItem(k)
+      }
+    })
+  }
+  try {
+    const res = await fetch(`${getApiBase()}/chat/wipe`, { method: 'POST' })
+    if (res.ok) return await res.json()
+  } catch {
+    // Fallback offline
+  }
+  return { message: 'Barrido de chats completado' }
 }
 
 export const getApiOrigin = () => {

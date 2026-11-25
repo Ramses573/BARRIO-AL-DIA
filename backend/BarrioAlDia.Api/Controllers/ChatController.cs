@@ -131,4 +131,13 @@ public class ChatController : ControllerBase
             durationSeconds = durationSeconds ?? 5
         });
     }
+
+    // POST: api/chat/wipe
+    [HttpPost("wipe")]
+    public async Task<IActionResult> WipeAllChatMessages()
+    {
+        await _context.Database.ExecuteSqlRawAsync("DELETE FROM ChatMessages");
+        await _hubContext.Clients.All.SendAsync("ChatWiped");
+        return Ok(new { message = "Barrido completo de mensajes de chat ejecutado." });
+    }
 }

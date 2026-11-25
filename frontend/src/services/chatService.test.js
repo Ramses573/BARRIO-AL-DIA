@@ -1,12 +1,9 @@
-import { getMessagesByTicket, sendChatMessage } from './chatService'
+import { getMessagesByTicket, sendChatMessage, wipeChats } from './chatService'
 
 describe('chatService', () => {
-  test('getMessagesByTicket retorna mensajes para ticket conocido', async () => {
-    const msgs = await getMessagesByTicket('TKT-CART-5821')
+  test('getMessagesByTicket retorna un arreglo limpio por defecto', async () => {
+    const msgs = await getMessagesByTicket('GENERAL')
     expect(Array.isArray(msgs)).toBe(true)
-    expect(msgs.length).toBeGreaterThan(0)
-    expect(msgs[0]).toHaveProperty('messageType')
-    expect(msgs[0]).toHaveProperty('content')
   })
 
   test('sendChatMessage envía y persiste mensaje de texto', async () => {
@@ -30,12 +27,19 @@ describe('chatService', () => {
       senderName: 'Cuadrilla Test',
       senderRole: 'Cuadrilla Municipal',
       messageType: 'Audio',
-      content: 'data:audio/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwH...',
+      content: '/audios/test.mp4',
       audioDurationSeconds: 12
     })
 
     expect(audioMsg).toBeDefined()
     expect(audioMsg.messageType).toBe('Audio')
     expect(audioMsg.audioDurationSeconds).toBe(12)
+  })
+
+  test('wipeChats limpia los mensajes de chat', async () => {
+    const res = await wipeChats()
+    expect(res).toBeDefined()
+    const msgs = await getMessagesByTicket('TKT-TEST-9999')
+    expect(msgs).toEqual([])
   })
 })
