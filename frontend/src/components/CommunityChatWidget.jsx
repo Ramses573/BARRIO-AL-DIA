@@ -16,7 +16,7 @@ import {
   Layers,
   ChevronDown
 } from 'lucide-react'
-import { getMessagesByTicket, sendChatMessage } from '../services/chatService'
+import { getMessagesByTicket, sendChatMessage, uploadChatAudio, resolveAudioUrl } from '../services/chatService'
 import { isAuthenticated, getCurrentOfficial } from '../services/authService'
 import { getAllTrackableTickets, fetchIncidentsFromApi } from '../services/incidentService'
 import { useToast } from './Toast'
@@ -41,6 +41,55 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const timerRef = useRef(null)
+  const recordingStartRef = useRef(0)
+  const isCancelledRef = useRef(false)
+
+  // Convertir audio webm/ogg a WAV PCM 16-bit para compatibilidad total en Android/iOS/Web
+  const convertBlobToWav = async (blob) => {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext
+    if (!AudioCtx) return null
+    const ctx = new AudioCtx()
+    try {
+      const arrayBuffer = await blob.arrayBuffer()
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+      const numChannels = 1
+      const sampleRate = audioBuffer.sampleRate
+      const samples = audioBuffer.getChannelData(0)
+      const buffer = new ArrayBuffer(44 + samples.length * 2)
+      const view = new DataView(buffer)
+
+      const writeStr = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
+      }
+
+      writeStr(0, 'RIFF')
+      view.setUint32(4, 36 + samples.length * 2, true)
+      writeStr(8, 'WAVE')
+      writeStr(12, 'fmt ')
+      view.setUint32(16, 16, true)
+      view.setUint16(20, 1, true)
+      view.setUint16(22, numChannels, true)
+      view.setUint32(24, sampleRate, true)
+      view.setUint32(28, sampleRate * numChannels * 2, true)
+      view.setUint16(32, numChannels * 2, true)
+      view.setUint16(34, 16, true)
+      writeStr(36, 'data')
+      view.setUint32(40, samples.length * 2, true)
+
+      let offset = 44
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]))
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true)
+        offset += 2
+      }
+
+      return new Blob([view], { type: 'audio/wav' })
+    } catch {
+      return null
+    } finally {
+      ctx.close().catch(() => {})
+    }
+  }
 
   // Reproducción de audios
   const [playingId, setPlayingId] = useState(null)
@@ -194,8 +243,12 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaRecorderRef.current = new MediaRecorder(stream)
+      const supportsMp4 = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/mp4')
+      const options = supportsMp4 ? { mimeType: 'audio/mp4' } : undefined
+      mediaRecorderRef.current = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream)
       audioChunksRef.current = []
+      isCancelledRef.current = false
+      recordingStartRef.current = Date.now()
 
       mediaRecorderRef.current.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -204,36 +257,54 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
       }
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        const reader = new FileReader()
-        reader.readAsDataURL(audioBlob)
-        reader.onloadend = async () => {
-          const base64Audio = reader.result
-          const duration = recordingSeconds || 3
+        stream.getTracks().forEach(track => track.stop())
+        if (isCancelledRef.current || !audioChunksRef.current.length) return
 
-          const sent = await sendChatMessage({
-            ticketCode,
-            senderName,
-            senderRole,
-            messageType: 'Audio',
-            content: base64Audio,
-            audioDurationSeconds: duration
-          })
+        const duration = Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000))
+        const rawMime = mediaRecorderRef.current?.mimeType || (supportsMp4 ? 'audio/mp4' : 'audio/webm')
+        let finalBlob = new Blob(audioChunksRef.current, { type: rawMime })
+        let fileName = rawMime.includes('mp4') ? 'audio.mp4' : 'audio.webm'
 
-          if (sent) {
-            setMessages(prev => {
-              if (!prev.some(m => m.id === sent.id)) {
-                return [...prev, sent]
-              }
-              return prev
-            })
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+        // Si el navegador grabó en webm/ogg, convertir a WAV compatible con Android/iOS
+        if (!rawMime.includes('mp4')) {
+          const wavBlob = await convertBlobToWav(finalBlob)
+          if (wavBlob) {
+            finalBlob = wavBlob
+            fileName = 'audio.wav'
           }
-          addToast('Nota de voz enviada correctamente', 'success')
         }
 
-        // Detener tracks del micrófono
-        stream.getTracks().forEach(track => track.stop())
+        // Subir archivo al servidor para que sea accesible desde Web y Móvil
+        const uploaded = await uploadChatAudio(finalBlob, ticketCode, duration, fileName)
+        let audioContent = uploaded?.audioUrl
+
+        if (!audioContent) {
+          audioContent = await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result)
+            reader.readAsDataURL(finalBlob)
+          })
+        }
+
+        const sent = await sendChatMessage({
+          ticketCode,
+          senderName,
+          senderRole,
+          messageType: 'Audio',
+          content: audioContent,
+          audioDurationSeconds: duration
+        })
+
+        if (sent) {
+          setMessages(prev => {
+            if (!prev.some(m => m.id === sent.id)) {
+              return [...prev, sent]
+            }
+            return prev
+          })
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+        }
+        addToast('Nota de voz enviada correctamente', 'success')
       }
 
       mediaRecorderRef.current.start()
@@ -261,6 +332,7 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   // Cancelar grabación
   const cancelRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      isCancelledRef.current = true
       audioChunksRef.current = []
       mediaRecorderRef.current.stop()
       setIsRecording(false)
@@ -270,22 +342,41 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
   }
 
   // Reproducir nota de voz
-  const handlePlayAudio = (msg) => {
+  const handlePlayAudio = async (msg) => {
     if (playingId === msg.id) {
       audioPlayerRef.current.pause()
       setPlayingId(null)
       return
     }
 
-    audioPlayerRef.current.src = msg.content
-    audioPlayerRef.current.play()
-    setPlayingId(msg.id)
+    if (msg.content && msg.content.startsWith('file://')) {
+      addToast('Audio antiguo guardado solo en el teléfono de origen.', 'info')
+      return
+    }
+
+    const src = resolveAudioUrl(msg.content)
+    if (!src) {
+      addToast('No hay audio disponible para reproducir.', 'info')
+      return
+    }
+
+    audioPlayerRef.current.pause()
+    audioPlayerRef.current.src = src
+    audioPlayerRef.current.load()
 
     audioPlayerRef.current.onended = () => {
       setPlayingId(null)
     }
     audioPlayerRef.current.onerror = () => {
-      addToast('Audio de demostración (simulado)', 'info')
+      addToast('No se pudo reproducir la nota de voz.', 'info')
+      setPlayingId(null)
+    }
+
+    try {
+      await audioPlayerRef.current.play()
+      setPlayingId(msg.id)
+    } catch {
+      addToast('No se pudo reproducir la nota de voz.', 'info')
       setPlayingId(null)
     }
   }

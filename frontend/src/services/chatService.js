@@ -63,10 +63,12 @@ export const getMessagesByTicket = async (ticketCode) => {
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data)) {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+        if (data.length > 0 || !INITIAL_DEMO_MESSAGES[code]) {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(`${CHAT_STORAGE_PREFIX}${code}`, JSON.stringify(data))
+          }
+          return data
         }
-        return data
       }
     }
   } catch {
@@ -97,6 +99,47 @@ export const getMessagesByTicket = async (ticketCode) => {
       isRead: true
     }
   ]
+}
+
+export const getApiOrigin = () => {
+  const base = getApiBase()
+  return base.replace(/\/api\/?$/, '')
+}
+
+export const resolveAudioUrl = (content) => {
+  if (!content || typeof content !== 'string') return ''
+  if (content.startsWith('http://') || content.startsWith('https://') || content.startsWith('data:') || content.startsWith('blob:')) {
+    return content
+  }
+  if (content.startsWith('/')) {
+    return `${getApiOrigin()}${content}`
+  }
+  return content
+}
+
+export const uploadChatAudio = async (audioBlob, ticketCode, durationSeconds, fileName = 'audio.mp4') => {
+  const code = (ticketCode || 'GENERAL').trim().toUpperCase()
+  const apiBase = getApiBase()
+
+  try {
+    const formData = new FormData()
+    formData.append('file', audioBlob, fileName)
+    formData.append('ticketCode', code)
+    formData.append('durationSeconds', String(durationSeconds || 3))
+
+    const res = await fetch(`${apiBase}/chat/upload-audio`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // Fallback offline
+  }
+
+  return null
 }
 
 export const sendChatMessage = async ({ ticketCode, senderName, senderRole, messageType, content, audioDurationSeconds }) => {

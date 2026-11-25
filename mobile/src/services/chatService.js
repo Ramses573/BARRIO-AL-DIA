@@ -1,7 +1,52 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { apiGet, apiPost } from './api'
+import { apiGet, apiPost, getApiBase } from './api'
 
 const CHAT_STORAGE_PREFIX = '@barrio_chat_ticket_'
+
+export const resolveAudioUrl = async (content) => {
+  if (!content || typeof content !== 'string') return ''
+  if (
+    content.startsWith('http://') ||
+    content.startsWith('https://') ||
+    content.startsWith('file://') ||
+    content.startsWith('data:')
+  ) {
+    return content
+  }
+  if (content.startsWith('/')) {
+    const base = await getApiBase()
+    const origin = base.replace(/\/api\/?$/, '')
+    return `${origin}${content}`
+  }
+  return content
+}
+
+export const uploadChatAudio = async (fileUri, ticketCode, durationSeconds) => {
+  if (!fileUri) return null
+  const code = (ticketCode || 'GENERAL').trim().toUpperCase()
+  try {
+    const base = await getApiBase()
+    const formData = new FormData()
+    formData.append('file', {
+      uri: fileUri,
+      name: `audio_${Date.now()}.m4a`,
+      type: 'audio/mp4'
+    })
+    formData.append('ticketCode', code)
+    formData.append('durationSeconds', String(durationSeconds || 1))
+
+    const res = await fetch(`${base}/chat/upload-audio`, {
+      method: 'POST',
+      body: formData
+    })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // Fallback offline
+  }
+  return null
+}
 
 const INITIAL_DEMO_MESSAGES = {
   'TKT-CART-5821': [

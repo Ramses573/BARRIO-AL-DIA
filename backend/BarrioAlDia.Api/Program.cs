@@ -69,7 +69,30 @@ var app = builder.Build();
 
 // Pipeline de Middleware
 app.UseCors("AllowFrontend");
-app.UseStaticFiles();
+
+var audiosPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "audios");
+if (!Directory.Exists(audiosPath))
+{
+    Directory.CreateDirectory(audiosPath);
+}
+
+var contentTypeProvider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".m4a"] = "audio/mp4";
+contentTypeProvider.Mappings[".mp4"] = "audio/mp4";
+contentTypeProvider.Mappings[".webm"] = "audio/webm";
+contentTypeProvider.Mappings[".wav"] = "audio/wav";
+contentTypeProvider.Mappings[".ogg"] = "audio/ogg";
+contentTypeProvider.Mappings[".mp3"] = "audio/mpeg";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider,
+    ServeUnknownFileTypes = true,
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+    }
+});
 
 if (app.Environment.IsDevelopment())
 {

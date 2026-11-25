@@ -17,7 +17,7 @@ import { Audio } from 'expo-av'
 import { colors, shadows } from '../theme/colors'
 import * as signalR from '@microsoft/signalr'
 import { DEV_PC_IP } from '../config'
-import { getMessagesByTicket, sendChatMessage } from '../services/chatService'
+import { getMessagesByTicket, sendChatMessage, uploadChatAudio, resolveAudioUrl } from '../services/chatService'
 import { getAllTrackableTickets } from '../services/incidentService'
 import { getCurrentUser } from '../services/authService'
 
@@ -215,13 +215,17 @@ export default function ChatScreen({ route }) {
 
       const citizenName = currentUser?.fullName || 'Ramsés Solano Calvo'
 
+      // Subir audio al servidor para que pueda escucharse en Web y Móvil
+      const uploaded = await uploadChatAudio(uri, ticketCode, duration)
+      const audioContent = uploaded?.audioUrl || uri
+
       const sent = await sendChatMessage({
         ticketCode,
         senderName: citizenName,
         senderRole: 'Ciudadano',
         messageType: 'Audio',
-        content: uri,
-        audioUri: uri,
+        content: audioContent,
+        audioUri: uploaded?.audioUrl ? null : uri,
         audioDurationSeconds: duration
       })
 
@@ -257,8 +261,19 @@ export default function ChatScreen({ route }) {
         return
       }
 
+      const resolvedUri = await resolveAudioUrl(uri)
+      if (!resolvedUri) {
+        Alert.alert('Nota de voz', 'No hay archivo de audio disponible.')
+        return
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true
+      })
+
       const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri },
+        { uri: resolvedUri },
         { shouldPlay: true }
       )
       setSound(newSound)
