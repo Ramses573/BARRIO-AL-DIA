@@ -1,5 +1,5 @@
 // Service Worker para Barrio al Día PWA
-const CACHE_NAME = 'barrio-al-dia-v1'
+const CACHE_NAME = 'barrio-al-dia-v2'
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -7,32 +7,46 @@ const URLS_TO_CACHE = [
   '/favicon.svg'
 ]
 
+const isLocalHost = () => {
+  const host = self.location.hostname || ''
+  return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.')
+}
+
 self.addEventListener('install', (event) => {
+  if (isLocalHost()) {
+    self.skipWaiting()
+    return
+  }
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(URLS_TO_CACHE)
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS_TO_CACHE))
   )
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
+          if (isLocalHost() || name !== CACHE_NAME) {
             return caches.delete(name)
           }
+          return Promise.resolve()
         })
       )
+    ).then(() => {
+      if (isLocalHost()) {
+        return self.registration.unregister()
+      }
+      return self.clients.claim()
     })
   )
-  self.clients.claim()
 })
 
 self.addEventListener('fetch', (event) => {
-  // Solo interceptar peticiones GET del mismo origen
+  if (isLocalHost()) {
+    return
+  }
   if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
     return
   }
@@ -40,7 +54,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clonar respuesta y guardar en caché
         if (response && response.status === 200) {
           const responseToCache = response.clone()
           caches.open(CACHE_NAME).then((cache) => {
@@ -50,7 +63,6 @@ self.addEventListener('fetch', (event) => {
         return response
       })
       .catch(() => {
-        // Fallback a caché si estamos offline
         return caches.match(event.request).then((cachedResponse) => {
           return cachedResponse || caches.match('/')
         })

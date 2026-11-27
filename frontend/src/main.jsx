@@ -4,12 +4,26 @@ import App from './App.jsx'
 import 'leaflet/dist/leaflet.css'
 import './index.css'
 
-// Registro seguro de Service Worker para PWA
-if ('serviceWorker' in navigator && (import.meta.env?.PROD || window.location.hostname === 'localhost')) {
+// En desarrollo local desregistrar Service Workers previos para evitar caché fantasma al detener el servidor
+if ('serviceWorker' in navigator) {
+  const isLocalDev = import.meta.env?.DEV ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Registro falló silenciosamente en entornos sin SSL
-    })
+    if (isLocalDev) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((reg) => reg.unregister())
+      }).catch(() => {})
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => caches.delete(name))
+        }).catch(() => {})
+      }
+    } else if (import.meta.env?.PROD) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {})
+    }
   })
 }
 
