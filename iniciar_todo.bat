@@ -74,8 +74,12 @@ echo   - Backend .NET 9 API: http://localhost:5000/swagger
 echo   - Frontend Web (PC):  https://localhost:3000
 echo   - Web en Celular GPS: https://%LAN_IP%:3000
 echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
-echo   - Escanea el QR abajo con la camara de Expo Go
 echo   ------------------------------------------------------
+echo   1) QR WEB (Camara del celular -> abre https://%LAN_IP%:3000):
+echo ========================================================
+node -e "require('./mobile/node_modules/qrcode-terminal').generate('https://%LAN_IP%:3000', {small: true})" 2>nul
+echo ========================================================
+echo   2) QR EXPO GO (Escanea el siguiente QR dentro de Expo Go):
 echo   Para detener todo el sistema: ejecuta detener_todo.bat
 echo ========================================================
 echo.
