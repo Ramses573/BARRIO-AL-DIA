@@ -5,7 +5,7 @@
 
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
-  : 'http://localhost:5000/api'
+  : (typeof window !== 'undefined' && window.location?.protocol === 'https:' ? '/api' : 'http://localhost:5000/api')
 
 const STORAGE_KEY = 'barrio_al_dia_incidents_v3'
 

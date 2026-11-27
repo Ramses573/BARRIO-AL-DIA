@@ -60,18 +60,19 @@ powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invok
 echo [5/6] Iniciando Frontend React Vite (Puerto 3000)...
 start /b cmd /c "npm run dev > frontend.log 2>&1"
 
-echo [INFO] Esperando inicio de interfaz web...
-powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { try { $res = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; if ($res.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Milliseconds 300 }; exit 0" >nul 2>&1
+echo [INFO] Esperando inicio de interfaz web (HTTPS)...
+powershell -NoProfile -Command "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; for ($i=0; $i -lt 25; $i++) { try { $res = Invoke-WebRequest -Uri https://localhost:3000 -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; if ($res.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Milliseconds 300 }; exit 0" >nul 2>&1
 
 echo [INFO] Abriendo aplicacion Web en el navegador...
-start http://localhost:3000
+start https://localhost:3000
 
 echo [6/6] Iniciando Metro Bundler para Aplicacion Movil...
 echo.
 echo ========================================================
 echo   [SISTEMA EN LINEA Y CALENTADO AL 100%%]
 echo   - Backend .NET 9 API: http://localhost:5000/swagger
-echo   - Frontend React Web: http://localhost:3000
+echo   - Frontend Web (PC):  https://localhost:3000
+echo   - Web en Celular GPS: https://%LAN_IP%:3000
 echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
 echo   - Escanea el QR abajo con la camara de Expo Go
 echo   ------------------------------------------------------

@@ -196,17 +196,6 @@ export default function ReportIncident() {
 
   // Detección de GPS en vivo
   const handleGetLiveLocation = () => {
-    const isInsecureLan = typeof window !== 'undefined' &&
-      window.isSecureContext === false &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1'
-
-    if (isInsecureLan) {
-      addToast('Tu navegador móvil bloquea el GPS en HTTP local (sin HTTPS). Tocá el mapa debajo para marcar el punto exacto.', 'info')
-      document.querySelector('.location-picker-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      return
-    }
-
     if (!navigator.geolocation) {
       addToast('Tu navegador o dispositivo no soporta geolocalización GPS.', 'warning')
       return

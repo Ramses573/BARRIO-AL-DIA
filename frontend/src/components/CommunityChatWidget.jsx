@@ -138,9 +138,11 @@ export default function CommunityChatWidget({ defaultTicketCode = 'GENERAL' }) {
     // Conexión SignalR instantánea
     let connection = null
     try {
-      const hubUrl = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
-        ? `http://${window.location.hostname}:5000/chatHub`
-        : 'http://localhost:5000/chatHub'
+      const hubUrl = (typeof window !== 'undefined' && window.location?.protocol === 'https:')
+        ? '/chatHub'
+        : (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+          ? `http://${window.location.hostname}:5000/chatHub`
+          : 'http://localhost:5000/chatHub'
 
       connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl)
