@@ -8,19 +8,17 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/2] Liberando puertos 3000 (Web), 5000 (API) y 8081 (Metro)...
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { taskkill /F /T /PID $_.OwningProcess >$null 2>&1 } }" >nul 2>&1
+echo [1/3] Cerrando ventanas y procesos de Barrio al Dia...
+taskkill /F /FI "WINDOWTITLE eq BARRIO_AL_DIA_TODO*" >nul 2>&1
 
-echo [2/2] Cerrando procesos residuales de Backend, Vite y Expo...
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*vite*' -or $_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localtunnel*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+echo [2/3] Liberando puertos 3000 (Web), 5000 (API) y 8081 (Metro)...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
+
+echo [3/3] Cerrando procesos residuales de Backend (.NET), Vite y Expo...
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localtunnel*' -or ($_.Name -eq 'cmd.exe' -and $_.CommandLine -like '*npm run dev*')) -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 
 echo.
-echo ========================================================
-echo  [OK] Todos los servicios han sido detenidos:
-echo   - Backend .NET 9 API (Puerto 5000 liberado)
-echo   - Frontend React Web (Puerto 3000 liberado)
-echo   - Expo Metro Movil   (Puerto 8081 liberado)
-echo ========================================================
+powershell -NoProfile -Command "$busy = Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue; if ($busy) { Write-Host '[AVISO] Algunos puertos siguen ocupados:' -ForegroundColor Yellow; $busy | Select-Object LocalPort, OwningProcess | Format-Table -AutoSize } else { Write-Host '[OK] Puertos 3000, 5000 y 8081 completamente liberados.' -ForegroundColor Green }"
 echo.
 timeout /t 2 >nul
 exit /b

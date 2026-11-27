@@ -24,7 +24,8 @@ if not exist "mobile\node_modules\" (
 )
 
 echo [3/6] Liberando puertos 3000 (Web), 5000 (API) y 8081 (Metro)...
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { taskkill /F /T /PID $_.OwningProcess >$null 2>&1 } }" >nul 2>&1
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 
 :: Detectar IP de red local limpia
 set LAN_IP=192.168.0.4
@@ -51,7 +52,7 @@ if not exist "backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll" (
     dotnet build backend\BarrioAlDia.Api\BarrioAlDia.Api.csproj -c Debug
 )
 set ASPNETCORE_ENVIRONMENT=Development
-start /b dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll --urls "http://0.0.0.0:5000" > backend.log 2>&1
+start /b cmd /c "dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api.dll --urls http://0.0.0.0:5000 > backend.log 2>&1"
 
 echo [INFO] Calentando Base de Datos y canal de chat en tiempo real...
 powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { $null = Invoke-RestMethod -Uri http://localhost:5000/api/chat/ticket/GENERAL -TimeoutSec 2 -ErrorAction SilentlyContinue; exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
@@ -74,17 +75,17 @@ echo   - Frontend React Web: http://localhost:3000
 echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
 echo   - Escanea el QR abajo con la camara de Expo Go
 echo   ------------------------------------------------------
-echo   Para detener todo el sistema: Presiona Ctrl+C
+echo   Para detener todo el sistema: ejecuta detener_todo.bat
 echo ========================================================
 echo.
 
 cd mobile
 call npx expo start --lan -c
 
-:: Limpieza automatica al salir de Metro con Ctrl+C
+:: Limpieza automatica si Metro termina normalmente
 echo.
 echo [INFO] Deteniendo servicios y liberando puertos...
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { taskkill /F /T /PID $_.OwningProcess >$null 2>&1 } }" >nul 2>&1
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*vite*' -or $_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*expo*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 echo [OK] Todos los servicios detenidos correctamente.
 exit /b
