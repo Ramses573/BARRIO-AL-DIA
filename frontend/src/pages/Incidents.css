@@ -596,3 +596,42 @@
   color: #ffffff !important;
   border-color: #15803d !important;
 }
+
+@media (max-width: 768px) {
+  .incidents-container {
+    padding: 1rem 0.85rem 3.5rem;
+  }
+  .header-meta {
+    min-width: 0;
+    width: 100%;
+  }
+  .incidents-page-header h1 {
+    font-size: 1.4rem;
+  }
+  .btn-create-report {
+    width: 100%;
+    justify-content: center;
+  }
+  .incidents-filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-group,
+  .filter-select {
+    width: 100%;
+  }
+  .incidents-count {
+    margin-left: 0;
+  }
+  .incidents-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .incident-full-card {
+    padding: 1rem;
+  }
+  .incidents-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

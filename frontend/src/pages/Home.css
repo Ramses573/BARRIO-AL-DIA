@@ -1353,13 +1353,40 @@
 }
 
 @media (max-width: 768px) {
+  .hero-section {
+    padding: 2.25rem 1rem 2rem;
+  }
   .hero-title {
-    font-size: 2.25rem;
+    font-size: 1.95rem;
+    line-height: 1.18;
+  }
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+  .hero-actions a,
+  .hero-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .stats-grid,
+  .features-grid,
+  .recent-incidents-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+  .orbital-showcase-section {
+    overflow: hidden;
   }
   .quick-emergency-bar {
     flex-direction: column;
     align-items: stretch;
     text-align: center;
+    padding: 0.85rem 1rem;
   }
   .emergency-indicator {
     justify-content: center;

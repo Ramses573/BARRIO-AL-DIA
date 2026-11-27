@@ -19,6 +19,26 @@
   gap: 1rem;
 }
 
+.navbar-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.navbar-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-page, #f8fafc);
+  color: var(--text-main, #1a2332);
+  cursor: pointer;
+}
+
 .navbar-brand-link {
   display: flex;
   align-items: center;
@@ -136,16 +156,56 @@
   .navbar-inner {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    gap: 0;
+  }
+  .navbar-mobile-toggle {
+    display: inline-flex;
+  }
+  .brand-sub {
+    display: none;
   }
   .navbar-right-section {
+    display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 0.65rem;
+    padding-top: 0.75rem;
+    margin-top: 0.6rem;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+  }
+  .navbar-right-section.mobile-open {
+    display: flex;
   }
   .navbar-nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+  .navbar-nav-links a {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.84rem;
+    background: var(--bg-page, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+  }
+  .navbar-public-actions {
     flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .btn-navbar-citizen-report,
+  .btn-navbar-citizen-track,
+  .navbar-locked-pill {
+    flex: 1 1 auto;
     justify-content: center;
+    padding: 0.5rem 0.75rem;
+  }
+  .navbar-official-chip,
+  .btn-navbar-logout,
+  .navbar-theme-control {
+    width: 100%;
+    justify-content: center;
+    padding: 0.45rem 0.75rem;
   }
 }
 

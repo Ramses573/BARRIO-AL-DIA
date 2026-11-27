@@ -467,11 +467,16 @@
 
 @media (max-width: 600px) {
   .community-chat-widget {
-    left: 1rem;
-    bottom: 4.5rem;
+    left: 0.75rem;
+    bottom: 0.9rem;
+  }
+  .btn-chat-floating {
+    padding: 0.65rem 0.95rem;
+    font-size: 0.82rem;
   }
   .chat-window-card {
-    width: calc(100vw - 2rem);
-    height: 420px;
+    width: calc(100vw - 1.5rem);
+    height: min(460px, calc(100dvh - 5.5rem));
+    max-height: calc(100dvh - 5.5rem);
   }
 }

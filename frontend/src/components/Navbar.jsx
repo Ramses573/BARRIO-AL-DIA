@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search, Newspaper } from 'lucide-react'
+import { Map, PlusCircle, ClipboardList, Bell, Building2, Palette, Lock, LogOut, UserCheck, Settings, Search, Newspaper, Menu, X } from 'lucide-react'
 import { THEMES, getCurrentTheme, applyTheme } from '../services/themeService'
 import { isAuthenticated, getCurrentOfficial, logout, resolveAvatarUrl } from '../services/authService'
 import ProfileModal from './ProfileModal'
@@ -13,8 +13,10 @@ export default function Navbar() {
   const isAuth = isAuthenticated()
   const [official, setOfficial] = useState(isAuth ? getCurrentOfficial() : null)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
+    setMobileMenuOpen(false)
     if (isAuth) {
       setOfficial(getCurrentOfficial())
     }
@@ -38,22 +40,34 @@ export default function Navbar() {
   return (
     <nav className="global-navbar">
       <div className="navbar-inner">
-        <Link to={isAuth ? "/" : "/login"} className="navbar-brand-link">
-          <div className="navbar-logo-icon">
-            <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
-              <rect x="6" y="2" width="24" height="32" rx="4" fill="#0284c7" />
-              <rect x="8" y="5" width="20" height="26" rx="2" fill="#dcfce7" />
-              <circle cx="18" cy="18" r="6" fill="#dc2626" />
-              <text x="18" y="22" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">!</text>
-            </svg>
-          </div>
-          <div className="navbar-brand-text">
-            <span className="brand-title">Barrio<span className="brand-highlight">AlDía</span></span>
-            <span className="brand-sub">Reportá hoy, mejorá mañana</span>
-          </div>
-        </Link>
+        <div className="navbar-top-row">
+          <Link to={isAuth ? "/" : "/login"} className="navbar-brand-link" onClick={() => setMobileMenuOpen(false)}>
+            <div className="navbar-logo-icon">
+              <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
+                <rect x="6" y="2" width="24" height="32" rx="4" fill="#0284c7" />
+                <rect x="8" y="5" width="20" height="26" rx="2" fill="#dcfce7" />
+                <circle cx="18" cy="18" r="6" fill="#dc2626" />
+                <text x="18" y="22" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="bold">!</text>
+              </svg>
+            </div>
+            <div className="navbar-brand-text">
+              <span className="brand-title">Barrio<span className="brand-highlight">AlDía</span></span>
+              <span className="brand-sub">Reportá hoy, mejorá mañana</span>
+            </div>
+          </Link>
 
-        <div className="navbar-right-section">
+          <button
+            type="button"
+            className="navbar-mobile-toggle"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+
+        <div className={`navbar-right-section ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           {isAuth ? (
             <>
               <ul className="navbar-nav-links">
