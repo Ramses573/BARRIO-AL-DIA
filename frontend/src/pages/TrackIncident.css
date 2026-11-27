@@ -619,13 +619,28 @@
 }
 
 @media (max-width: 768px) {
+  .track-container {
+    padding: 1.25rem 0.85rem 3.5rem;
+  }
+  .track-header h1 {
+    font-size: 1.45rem;
+  }
   .track-search-box {
     flex-direction: column;
   }
+  .track-search-box button {
+    width: 100%;
+    justify-content: center;
+  }
+  .ticket-result-card {
+    padding: 1.15rem;
+  }
   .ticket-result-header {
     flex-direction: column;
+    gap: 0.75rem;
   }
   .ticket-details-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
   }
 }

@@ -1007,12 +1007,47 @@
 }
 
 @media (max-width: 600px) {
+  .report-container {
+    padding: 1rem 0.75rem 3.5rem;
+  }
+  .pdf-paper-card {
+    padding: 1.15rem 0.9rem;
+    border-radius: 10px;
+  }
+  .pdf-header-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .category-grid-3col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .input-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .btn-detect-gps {
+    width: 100%;
+    justify-content: center;
+  }
   .urgency-selector-row {
     grid-template-columns: 1fr;
   }
   .photos-gallery-grid {
     grid-template-columns: 1fr;
     height: auto;
+  }
+  .report-actions-bar,
+  .pdf-submit-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .report-actions-bar button,
+  .pdf-submit-row button {
+    width: 100%;
+    justify-content: center;
   }
 }
 

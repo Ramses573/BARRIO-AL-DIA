@@ -930,6 +930,12 @@
   .admin-dashboard-container {
     padding: 1rem 0.85rem 3.5rem;
   }
+  .admin-header-meta,
+  .admin-search-box,
+  .admin-filter-group {
+    min-width: 0;
+    width: 100%;
+  }
   .admin-header {
     flex-direction: column;
     align-items: stretch;

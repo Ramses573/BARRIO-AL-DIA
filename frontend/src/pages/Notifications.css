@@ -105,6 +105,17 @@
 @media (max-width: 900px) {
   .pdf-notif-layout {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .phone-mockup-frame {
+    width: 100%;
+    max-width: 340px;
+  }
+  .phone-actions-row {
+    grid-template-columns: 1fr;
+  }
+  .notif-details-grid {
+    grid-template-columns: 1fr;
   }
 }
 
