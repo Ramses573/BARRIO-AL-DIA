@@ -352,6 +352,38 @@ export default function ReportScreen({ navigation }) {
         placeholderTextColor={colors.textLight}
       />
 
+      <View style={styles.zoneChipsRow}>
+        {[
+          { name: 'Cartago', lat: 9.8644, lng: -83.9194 },
+          { name: 'Turrialba', lat: 9.9047, lng: -83.6835 },
+          { name: 'Tarrazú', lat: 9.6611, lng: -84.0206 }
+        ].map((z) => (
+          <TouchableOpacity
+            key={z.name}
+            style={styles.zoneChip}
+            onPress={() => {
+              setLat(z.lat)
+              setLng(z.lng)
+              setGpsAccuracy(15)
+              setLocation(`Sector ${z.name} (${z.lat.toFixed(4)}, ${z.lng.toFixed(4)})`)
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="location-outline" size={12} color={colors.primary} />
+            <Text style={styles.zoneChipText}>{z.name}</Text>
+          </TouchableOpacity>
+        ))}
+
+        <TouchableOpacity
+          style={styles.zoneChipMap}
+          onPress={() => Linking.openURL(getWebMapUrl(lat || 9.8644, lng || -83.9194, location || 'Nuevo Reporte'))}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="map-outline" size={12} color="#ffffff" />
+          <Text style={styles.zoneChipMapText}>Ver Mapa</Text>
+        </TouchableOpacity>
+      </View>
+
       {lat && lng && (
         <View style={styles.gpsBadge}>
           <Ionicons name="checkmark-circle" size={14} color={colors.urgencyLow} />
@@ -922,6 +954,42 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
+  },
+  zoneChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  zoneChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  zoneChipText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  zoneChipMap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+  },
+  zoneChipMapText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   modalOverlay: {
     flex: 1,

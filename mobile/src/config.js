@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
 
 // Dirección IP local de la PC de desarrollo para que el celular físico o emulador
 // pueda comunicarse directamente con la aplicación web y el backend.
-export const DEV_PC_IP = '192.168.0.4'
+export const DEV_PC_IP = '192.168.0.6'
 
 // URL de la aplicación Web (Vite)
 export const WEB_APP_URL = Platform.select({

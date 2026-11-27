@@ -1,0 +1,75 @@
+.location-picker-box {
+  margin-top: 0.65rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-page, #f8fafc);
+}
+
+.location-picker-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-card, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.location-picker-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted, #475569);
+}
+
+.location-picker-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.btn-zone-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-page, #f1f5f9);
+  color: var(--text-main, #1e293b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-zone-preset:hover {
+  border-color: var(--primary-color, #0284c7);
+  color: var(--primary-color, #0284c7);
+}
+
+.location-picker-canvas {
+  width: 100%;
+  height: 250px;
+  z-index: 1;
+}
+
+.picker-custom-pin {
+  background: transparent;
+  border: none;
+}
+
+@media (max-width: 600px) {
+  .location-picker-canvas {
+    height: 220px;
+  }
+  .location-picker-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

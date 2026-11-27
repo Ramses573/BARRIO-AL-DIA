@@ -28,6 +28,7 @@ import {
 import { addIncident } from '../services/incidentService'
 import { isAuthenticated } from '../services/authService'
 import { useToast } from '../components/Toast'
+import LocationPickerMap from '../components/LocationPickerMap'
 import './ReportIncident.css'
 
 const DRAFT_STORAGE_KEY = 'barrio_al_dia_report_draft'
@@ -614,6 +615,20 @@ export default function ReportIncident() {
                     onChange={handleChange}
                     placeholder="Ej. Barrio El Carmen, 100 m norte del parque"
                     required
+                  />
+
+                  <LocationPickerMap
+                    lat={form.lat}
+                    lng={form.lng}
+                    onSelectLocation={({ lat: pickedLat, lng: pickedLng, location: pickedLocation }) => {
+                      setForm(prev => ({
+                        ...prev,
+                        lat: pickedLat,
+                        lng: pickedLng,
+                        gpsAccuracy: null,
+                        location: pickedLocation
+                      }))
+                    }}
                   />
                 </div>
 
