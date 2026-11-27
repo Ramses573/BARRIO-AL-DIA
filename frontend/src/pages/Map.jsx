@@ -385,7 +385,16 @@ export default function Map() {
       },
       () => {
         setIsLocating(false)
-        addToast('No fue posible obtener tu GPS. Verifica los permisos de ubicación de tu navegador.', 'info')
+        const isInsecureLan = typeof window !== 'undefined' &&
+          window.isSecureContext === false &&
+          window.location.hostname !== 'localhost' &&
+          window.location.hostname !== '127.0.0.1'
+        addToast(
+          isInsecureLan
+            ? 'El navegador móvil bloquea el GPS en HTTP local (sin HTTPS). Usá los botones de cantón o reportá tocando el mapa.'
+            : 'No fue posible obtener tu GPS. Verifica los permisos de ubicación de tu navegador.',
+          'info'
+        )
       },
       { enableHighAccuracy: true, timeout: 8000 }
     )

@@ -196,6 +196,17 @@ export default function ReportIncident() {
 
   // Detección de GPS en vivo
   const handleGetLiveLocation = () => {
+    const isInsecureLan = typeof window !== 'undefined' &&
+      window.isSecureContext === false &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1'
+
+    if (isInsecureLan) {
+      addToast('Tu navegador móvil bloquea el GPS en HTTP local (sin HTTPS). Tocá el mapa debajo para marcar el punto exacto.', 'info')
+      document.querySelector('.location-picker-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
     if (!navigator.geolocation) {
       addToast('Tu navegador o dispositivo no soporta geolocalización GPS.', 'warning')
       return
@@ -219,10 +230,15 @@ export default function ReportIncident() {
       },
       (err) => {
         setIsLocating(false)
-        let msg = 'No se pudo acceder a tu ubicación GPS.'
-        if (err.code === 1) msg = 'Permiso de ubicación denegado por el usuario.'
-        else if (err.code === 2) msg = 'Señal de ubicación GPS no disponible.'
-        addToast(msg, 'error')
+        let msg = 'No se pudo acceder a tu ubicación GPS. Tocá el mapa para marcarla manualmente.'
+        if (typeof window !== 'undefined' && window.isSecureContext === false) {
+          msg = 'El navegador bloquea el GPS en HTTP local. Marcá el punto tocando el mapa debajo.'
+        } else if (err.code === 1) {
+          msg = 'Permiso de ubicación denegado. Podés marcar el punto tocando el mapa debajo.'
+        } else if (err.code === 2) {
+          msg = 'Señal de ubicación GPS no disponible.'
+        }
+        addToast(msg, 'info')
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
