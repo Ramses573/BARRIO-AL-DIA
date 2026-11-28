@@ -56,7 +56,7 @@ export const DEFAULT_CITIZENS = [
     barrio: 'Barrio El Carmen',
     email: 'ramses@comunidad.cr',
     phone: '8765-4321',
-    password: '123'
+    password: 'VecinoCartago#26!'
   },
   {
     id: 102,
@@ -67,7 +67,7 @@ export const DEFAULT_CITIZENS = [
     barrio: 'El Mora',
     email: 'maria@comunidad.cr',
     phone: '8811-2233',
-    password: '123'
+    password: 'VecinoTurrialba$26!'
   },
   {
     id: 103,
@@ -78,7 +78,7 @@ export const DEFAULT_CITIZENS = [
     barrio: 'San Marcos',
     email: 'carlos@comunidad.cr',
     phone: '8344-5566',
-    password: '123'
+    password: 'VecinoTarrazu%26!'
   }
 ]
 
@@ -92,7 +92,7 @@ export const DEFAULT_OFFICIALS = [
     barrio: 'Cartago Centro',
     email: 'carlos.mendez@muni-cartago.go.cr',
     phone: '2550-0000',
-    password: 'admin'
+    password: 'MuniCartago#2026!'
   }
 ]
 
@@ -136,13 +136,13 @@ export const login = async (identifier, password) => {
   )
 
   if (foundCitizen) {
-    if (!foundCitizen.password || foundCitizen.password === passClean || passClean === '123' || passClean === 'admin123') {
+    if (foundCitizen.password && foundCitizen.password === passClean) {
       const fakeToken = `vecino-token-${Date.now()}`
       await AsyncStorage.setItem(TOKEN_KEY, fakeToken)
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(foundCitizen))
       return { success: true, user: foundCitizen }
     } else {
-      return { success: false, error: 'Contraseña incorrecta. (Prueba con "123")' }
+      return { success: false, error: 'Contraseña incorrecta.' }
     }
   }
 

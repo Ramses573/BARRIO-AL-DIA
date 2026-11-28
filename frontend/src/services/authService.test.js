@@ -22,7 +22,7 @@ describe('authService', () => {
   })
 
   test('successfully logs in with valid official credentials (fallback)', async () => {
-    const result = await login('carlos.mendez', 'Admin1234!')
+    const result = await login('carlos.mendez', 'MuniCartago#2026!')
     expect(result.success).toBe(true)
     expect(result.official.fullName).toBe('Ing. Carlos Méndez Solís')
     expect(isAuthenticated()).toBe(true)
@@ -34,7 +34,7 @@ describe('authService', () => {
   })
 
   test('logs out correctly', async () => {
-    await login('carlos.mendez', 'Admin1234!')
+    await login('carlos.mendez', 'MuniCartago#2026!')
     expect(isAuthenticated()).toBe(true)
     logout()
     expect(isAuthenticated()).toBe(false)

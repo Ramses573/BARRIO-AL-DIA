@@ -47,7 +47,7 @@ export default function ProfileScreen({ navigation }) {
 
   // Formulario Login
   const [loginIdentifier, setLoginIdentifier] = useState('')
-  const [loginPassword, setLoginPassword] = useState('123')
+  const [loginPassword, setLoginPassword] = useState('')
   const [loadingLogin, setLoadingLogin] = useState(false)
 
   // Formulario Registro
@@ -55,7 +55,7 @@ export default function ProfileScreen({ navigation }) {
   const [regCanton, setRegCanton] = useState('Cartago')
   const [regBarrio, setRegBarrio] = useState('')
   const [regPhone, setRegPhone] = useState('')
-  const [regPassword, setRegPassword] = useState('123')
+  const [regPassword, setRegPassword] = useState('')
   const [loadingReg, setLoadingReg] = useState(false)
 
   useEffect(() => {
@@ -613,22 +613,22 @@ export default function ProfileScreen({ navigation }) {
 
           {/* Accesos rápidos sugeridos */}
           <View style={styles.quickAccountsBox}>
-            <Text style={styles.quickAccountsTitle}>Cuentas comunitarias disponibles (Clave: 123):</Text>
+            <Text style={styles.quickAccountsTitle}>Cuentas comunitarias disponibles:</Text>
             <TouchableOpacity
               style={styles.quickBtn}
-              onPress={() => { setLoginIdentifier('vecino.cartago'); setLoginPassword('123') }}
+              onPress={() => { setLoginIdentifier('vecino.cartago'); setLoginPassword('') }}
             >
               <Text style={styles.quickBtnText}>👤 Ramsés Solano (vecino.cartago - Cartago)</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickBtn}
-              onPress={() => { setLoginIdentifier('vecino.turrialba'); setLoginPassword('123') }}
+              onPress={() => { setLoginIdentifier('vecino.turrialba'); setLoginPassword('') }}
             >
               <Text style={styles.quickBtnText}>👤 María Gómez (vecino.turrialba - Turrialba)</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickBtn}
-              onPress={() => { setLoginIdentifier('vecino.tarrazu'); setLoginPassword('123') }}
+              onPress={() => { setLoginIdentifier('vecino.tarrazu'); setLoginPassword('') }}
             >
               <Text style={styles.quickBtnText}>👤 Carlos Ureña (vecino.tarrazu - Tarrazú)</Text>
             </TouchableOpacity>

@@ -53,7 +53,7 @@ public class BarrioDbContext : DbContext
                 Role = "Director de Obras y Servicios Públicos",
                 Entity = "Municipalidad de Cartago",
                 Email = "carlos.mendez@muni-cartago.go.cr",
-                PasswordHash = "Admin1234!", // Se valida contra hash o demo
+                PasswordHash = "MuniCartago#2026!",
                 BadgeNumber = "MC-4921",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
@@ -66,7 +66,7 @@ public class BarrioDbContext : DbContext
                 Role = "Coordinadora de Obras Comunales",
                 Entity = "Municipalidad de Turrialba",
                 Email = "elena.rojas@muni-turrialba.go.cr",
-                PasswordHash = "Admin1234!",
+                PasswordHash = "MuniTurrialba$2026!",
                 BadgeNumber = "MT-1840",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
@@ -79,7 +79,7 @@ public class BarrioDbContext : DbContext
                 Role = "Inspector de Infraestructura Vial",
                 Entity = "Municipalidad de Tarrazú",
                 Email = "marco.solano@munitarrazu.go.cr",
-                PasswordHash = "Admin1234!",
+                PasswordHash = "MuniTarrazu%2026!",
                 BadgeNumber = "MZ-0372",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)

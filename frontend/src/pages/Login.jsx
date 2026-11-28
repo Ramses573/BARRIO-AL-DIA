@@ -27,8 +27,8 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState('login') // 'login' | 'register'
 
   // Login form state
-  const [username, setUsername] = useState('carlos.mendez')
-  const [password, setPassword] = useState('Admin1234!')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   // Register form state
   const [regFullName, setRegFullName] = useState('')
@@ -110,9 +110,9 @@ export default function Login() {
 
   const handlePreFill = (official) => {
     setUsername(official.username)
-    setPassword('Admin1234!')
+    setPassword('')
     setErrorMsg('')
-    addToast(`Credenciales cargadas para ${official.fullName || official.name}`, 'info')
+    addToast(`Usuario cargado para ${official.fullName || official.name}`, 'info')
   }
 
   return (
