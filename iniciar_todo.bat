@@ -67,12 +67,24 @@ powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { try { $res = Invok
 echo [INFO] Abriendo aplicacion Web en el navegador...
 start http://localhost:3000
 
+echo [INFO] Iniciando tunel HTTPS Cloudflare (sin aviso de sitio no seguro)...
+del /q tunnel.log >nul 2>&1
+set CF_EXE=cloudflared
+if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe
+if exist "C:\Program Files\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files\cloudflared\cloudflared.exe
+start /b cmd /c ""%CF_EXE%" tunnel --url http://127.0.0.1:3000 > tunnel.log 2>&1"
+set WEB_HTTPS_URL=http://%LAN_IP%:3000
+for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9-]+\.trycloudflare\.com') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
+    if not "%%u"=="" set WEB_HTTPS_URL=%%u
+)
+
 echo [6/6] Iniciando Metro Bundler para Aplicacion Movil (QR Expo Go)...
 echo.
 echo ========================================================
 echo   [SISTEMA EN LINEA Y CALENTADO AL 100%%]
 echo   - Backend .NET 9 API: http://localhost:5000/swagger
 echo   - Frontend Web (PC):  http://localhost:3000
+echo   - Web Segura Celular: %WEB_HTTPS_URL%
 echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
 echo   - Escanea el QR de abajo con Expo Go en tu celular
 echo   ------------------------------------------------------

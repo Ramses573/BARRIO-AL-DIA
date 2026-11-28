@@ -83,19 +83,39 @@ export default function ReportScreen({ navigation }) {
   const handleGetGps = async () => {
     setIsLocating(true)
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
-      if (status !== 'granted') {
-        Alert.alert('Permiso denegado', 'Se requiere permiso de ubicación para obtener coordenadas GPS.')
-        setIsLocating(false)
+      const enabled = await Location.hasServicesEnabledAsync()
+      if (!enabled) {
+        Alert.alert('GPS desactivado', 'Enciende la Ubicación/GPS de tu teléfono e inténtalo de nuevo.')
         return
       }
 
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Se requiere permiso de ubicación para obtener coordenadas GPS.')
+        return
+      }
+
+      let current = null
+      try {
+        current = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+        ])
+      } catch {
+        current = await Location.getLastKnownPositionAsync()
+      }
+
+      if (!current || !current.coords) {
+        Alert.alert('Aviso GPS', 'No se pudo obtener la posición satelital en este momento. Intenta acercarte a una ventana o usa los botones de sector.')
+        return
+      }
+
       setLat(current.coords.latitude)
       setLng(current.coords.longitude)
-      setGpsAccuracy(Math.round(current.coords.accuracy || 10))
+      const acc = Math.round(current.coords.accuracy || 15)
+      setGpsAccuracy(acc)
       setLocation(`Coordenadas GPS (${current.coords.latitude.toFixed(4)}, ${current.coords.longitude.toFixed(4)})`)
-      Alert.alert('GPS Fijado', `Precisión de ±${Math.round(current.coords.accuracy || 10)} metros`)
+      Alert.alert('GPS Fijado', `Precisión de ±${acc} metros`)
     } catch {
       Alert.alert('Aviso GPS', 'No se pudo obtener la posición satelital en este momento.')
     } finally {
