@@ -18,6 +18,10 @@ const proxyConfig = {
   '/avatars': {
     target: 'http://127.0.0.1:5000',
     changeOrigin: true
+  },
+  '/swagger': {
+    target: 'http://127.0.0.1:5000',
+    changeOrigin: true
   }
 }
 
