@@ -25,7 +25,7 @@ if not exist "mobile\node_modules\" (
 
 echo [3/6] Liberando puertos 3000 (Web), 5000 (API) y 8081 (Metro)...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*' -or $_.Name -eq 'cloudflared.exe') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 
 :: Detectar IP de red local limpia
 set LAN_IP=192.168.0.4
@@ -67,11 +67,14 @@ powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { try { $res = Invok
 echo [INFO] Abriendo aplicacion Web en el navegador...
 start http://localhost:3000
 
-echo [INFO] Generando tunel HTTPS confiable para GPS en celular...
+echo [INFO] Generando tunel HTTPS Cloudflare (rapido y con GPS en celular)...
 del /q tunnel.log >nul 2>&1
-start /b cmd /c "ssh -T -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 80:127.0.0.1:3000 nokey@localhost.run > tunnel.log 2>&1"
+set CF_EXE=cloudflared
+if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe
+if exist "C:\Program Files\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files\cloudflared\cloudflared.exe
+start /b cmd /c ""%CF_EXE%" tunnel --url http://127.0.0.1:3000 > tunnel.log 2>&1"
 set WEB_HTTPS_URL=http://%LAN_IP%:3000
-for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9.-]+\.lhr\.life') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
+for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9-]+\.trycloudflare\.com') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
     if not "%%u"=="" set WEB_HTTPS_URL=%%u
 )
 
@@ -100,6 +103,6 @@ pause >nul
 echo.
 echo [INFO] Deteniendo servicios y liberando puertos...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*' -or $_.Name -eq 'cloudflared.exe') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 echo [OK] Todos los servicios detenidos correctamente.
 exit /b
