@@ -57,37 +57,23 @@ start /b cmd /c "dotnet backend\BarrioAlDia.Api\bin\Debug\net9.0\BarrioAlDia.Api
 echo [INFO] Calentando Base de Datos y canal de chat en tiempo real...
 powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invoke-RestMethod -Uri http://localhost:5000/api/health -TimeoutSec 1 -ErrorAction Stop; if ($res.status -eq 'Healthy') { $null = Invoke-RestMethod -Uri http://localhost:5000/api/chat/ticket/GENERAL -TimeoutSec 2 -ErrorAction SilentlyContinue; exit 0 } } catch {}; Start-Sleep -Milliseconds 400 }; exit 0" >nul 2>&1
 
-echo [5/6] Compilando e iniciando Frontend React (Puerto 3000)...
-call npm run build --prefix frontend > frontend_build.log 2>&1
-start /b cmd /c "npm run preview --prefix frontend -- --port 3000 --host > frontend.log 2>&1"
+echo [5/6] Iniciando Frontend React (Puerto 3000) y Tailscale Funnel HTTPS (Puerto 5000)...
+start /b cmd /c "npm run dev --prefix frontend > frontend.log 2>&1"
+tailscale funnel --bg 5000 >nul 2>&1
 
 echo [INFO] Esperando inicio de interfaz web...
 powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { try { $res = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; if ($res.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Milliseconds 300 }; exit 0" >nul 2>&1
 
-echo [INFO] Iniciando tunel HTTPS Cloudflare (todo en HTTPS)...
-del /q tunnel.log >nul 2>&1
-set CF_EXE=cloudflared
-if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files (x86)\cloudflared\cloudflared.exe
-if exist "C:\Program Files\cloudflared\cloudflared.exe" set CF_EXE=C:\Program Files\cloudflared\cloudflared.exe
-start /b cmd /c ""%CF_EXE%" tunnel --url http://127.0.0.1:3000 > tunnel.log 2>&1"
-set WEB_HTTPS_URL=https://localhost:3000
-for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9-]+\.trycloudflare\.com') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
-    if not "%%u"=="" set WEB_HTTPS_URL=%%u
-)
-
-:: Sincronizar URL HTTPS en mobile\src\config.js para que el movil use HTTPS
-powershell -NoProfile -Command "$cfgPath = 'mobile\src\config.js'; if (Test-Path $cfgPath) { $c = Get-Content $cfgPath -Raw; $c = $c -replace 'export const PUBLIC_HTTPS_URL = ''.*?''', ('export const PUBLIC_HTTPS_URL = ''' + '%WEB_HTTPS_URL%' + ''''); Set-Content $cfgPath $c -NoNewline }" >nul 2>&1
-
-echo [INFO] Abriendo aplicacion Web HTTPS en el navegador...
-start %WEB_HTTPS_URL%
+echo [INFO] Abriendo aplicacion Web en el navegador...
+start http://localhost:3000
 
 echo [6/6] Iniciando Metro Bundler para Aplicacion Movil (QR Expo Go)...
 echo.
 echo ========================================================
-echo   [SISTEMA EN LINEA 100%% HTTPS]
-echo   - Backend .NET 9 API: %WEB_HTTPS_URL%/swagger
-echo   - Frontend Web (HTTPS): %WEB_HTTPS_URL%
-echo   - API Servidor Movil: %WEB_HTTPS_URL%/api
+echo   [SISTEMA EN LINEA CON BACKEND HTTPS FIJO]
+echo   - Backend API (HTTPS): https://madrenzo.tail8f3798.ts.net/swagger
+echo   - API Servidor Movil:  https://madrenzo.tail8f3798.ts.net/api
+echo   - Frontend Web (PC):   http://localhost:3000
 echo   - Escanea el QR de abajo con Expo Go en tu celular
 echo   ------------------------------------------------------
 echo   Para detener todo el sistema: ejecuta detener_todo.bat

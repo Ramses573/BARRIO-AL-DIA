@@ -6,24 +6,18 @@ import { Platform } from 'react-native'
 // Dirección IP local de la PC de desarrollo
 export const DEV_PC_IP = '192.168.0.6'
 
-// URL HTTPS pública (actualizada automáticamente por iniciar_todo.bat)
-export const PUBLIC_HTTPS_URL = ''
+// URL HTTPS fija del Backend (.NET 9 + Tailscale Funnel)
+export const PUBLIC_HTTPS_URL = 'https://madrenzo.tail8f3798.ts.net'
 
-// URL de la aplicación Web (Vite)
-export const WEB_APP_URL = PUBLIC_HTTPS_URL || Platform.select({
+// URL de la aplicación Web (Vercel / Cloudflare Pages o Vite local)
+export const WEB_APP_URL = Platform.select({
   android: `http://${DEV_PC_IP}:3000`,
   ios: `http://${DEV_PC_IP}:3000`,
   default: 'http://localhost:3000'
 })
 
-// URL del backend .NET API
-export const API_BASE_URL = PUBLIC_HTTPS_URL
-  ? `${PUBLIC_HTTPS_URL}/api`
-  : Platform.select({
-    android: `http://${DEV_PC_IP}:5000/api`,
-    ios: `http://${DEV_PC_IP}:5000/api`,
-    default: 'http://localhost:5000/api'
-  })
+// URL del backend .NET API (HTTPS fijo)
+export const API_BASE_URL = `${PUBLIC_HTTPS_URL}/api`
 
 /**
  * Genera la URL para abrir el mapa interactivo de la app web en tiempo real
