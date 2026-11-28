@@ -291,6 +291,7 @@ public class IncidentsController : ControllerBase
     }
 
     // PATCH: api/incidents/5/status
+    [Authorize]
     [HttpPatch("{id:int}/status")]
     public async Task<IActionResult> UpdateIncidentStatus(int id, [FromBody] UpdateIncidentStatusDto dto)
     {

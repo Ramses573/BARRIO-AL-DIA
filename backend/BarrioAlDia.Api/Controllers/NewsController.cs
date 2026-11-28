@@ -108,6 +108,7 @@ public class NewsController : ControllerBase
     }
 
     // POST: api/news
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateNews([FromBody] CreateNewsDto dto)
     {

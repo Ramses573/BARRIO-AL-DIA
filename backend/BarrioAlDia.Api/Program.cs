@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -42,9 +43,13 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Autenticación y validación JWT
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key no configurado en appsettings.json o variables de entorno.");
+// Autenticación y validación JWT (prioriza User Secrets / variables de entorno; clave efímera si falta en entorno local)
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    jwtKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+    builder.Configuration["Jwt:Key"] = jwtKey;
+}
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "BarrioAlDiaApi";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "BarrioAlDiaClients";
 
@@ -139,12 +144,17 @@ app.UseStaticFiles(new StaticFileOptions
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Barrio al Día API v1");
-        c.RoutePrefix = "swagger";
-    });
+    app.UseWhen(
+        ctx => ctx.Request.Host.Host is "localhost" or "127.0.0.1",
+        swaggerApp =>
+        {
+            swaggerApp.UseSwagger();
+            swaggerApp.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Barrio al Día API v1");
+                c.RoutePrefix = "swagger";
+            });
+        });
 }
 
 // Endpoint de verificación de salud

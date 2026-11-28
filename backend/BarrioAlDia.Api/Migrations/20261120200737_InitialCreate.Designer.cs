@@ -422,7 +422,7 @@ namespace BarrioAlDia.Api.Migrations
                             Entity = "Municipalidad de Cartago",
                             FullName = "Ing. Carlos Méndez Solís",
                             IsActive = true,
-                            PasswordHash = "Admin1234!",
+                            PasswordHash = "MuniCartago#2026!",
                             Role = "Director de Obras y Servicios Públicos",
                             Username = "carlos.mendez"
                         },
@@ -435,7 +435,7 @@ namespace BarrioAlDia.Api.Migrations
                             Entity = "Municipalidad de Turrialba",
                             FullName = "Licda. Elena Rojas Umaña",
                             IsActive = true,
-                            PasswordHash = "Admin1234!",
+                            PasswordHash = "MuniTurrialba$2026!",
                             Role = "Coordinadora de Obras Comunales",
                             Username = "elena.rojas"
                         },
@@ -448,7 +448,7 @@ namespace BarrioAlDia.Api.Migrations
                             Entity = "Municipalidad de Tarrazú",
                             FullName = "Téc. Marco Solano Vargas",
                             IsActive = true,
-                            PasswordHash = "Admin1234!",
+                            PasswordHash = "MuniTarrazu%2026!",
                             Role = "Inspector de Infraestructura Vial",
                             Username = "marco.solano"
                         });

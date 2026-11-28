@@ -156,9 +156,9 @@ namespace BarrioAlDia.Api.Migrations
                 columns: new[] { "Id", "BadgeNumber", "CreatedAt", "Email", "Entity", "FullName", "IsActive", "PasswordHash", "Role", "Username" },
                 values: new object[,]
                 {
-                    { 1, "MC-4921", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "carlos.mendez@muni-cartago.go.cr", "Municipalidad de Cartago", "Ing. Carlos Méndez Solís", true, "Admin1234!", "Director de Obras y Servicios Públicos", "carlos.mendez" },
-                    { 2, "MT-1840", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "elena.rojas@muni-turrialba.go.cr", "Municipalidad de Turrialba", "Licda. Elena Rojas Umaña", true, "Admin1234!", "Coordinadora de Obras Comunales", "elena.rojas" },
-                    { 3, "MZ-0372", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "marco.solano@munitarrazu.go.cr", "Municipalidad de Tarrazú", "Téc. Marco Solano Vargas", true, "Admin1234!", "Inspector de Infraestructura Vial", "marco.solano" }
+                    { 1, "MC-4921", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "carlos.mendez@muni-cartago.go.cr", "Municipalidad de Cartago", "Ing. Carlos Méndez Solís", true, "MuniCartago#2026!", "Director de Obras y Servicios Públicos", "carlos.mendez" },
+                    { 2, "MT-1840", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "elena.rojas@muni-turrialba.go.cr", "Municipalidad de Turrialba", "Licda. Elena Rojas Umaña", true, "MuniTurrialba$2026!", "Coordinadora de Obras Comunales", "elena.rojas" },
+                    { 3, "MZ-0372", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "marco.solano@munitarrazu.go.cr", "Municipalidad de Tarrazú", "Téc. Marco Solano Vargas", true, "MuniTarrazu%2026!", "Inspector de Infraestructura Vial", "marco.solano" }
                 });
 
             migrationBuilder.CreateIndex(

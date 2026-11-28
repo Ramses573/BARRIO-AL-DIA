@@ -222,7 +222,10 @@ export const updateIncidentStatus = (id, newStatus, institutionalNote = '') => {
   try {
     fetch(`${API_BASE}/incidents/${numericId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify({
         status: newStatus,
         institutionalNote: institutionalNote

@@ -30,6 +30,7 @@ public class NotificationsController : ControllerBase
     }
 
     // DELETE: api/notifications/5
+    [Authorize]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DismissNotification(int id)
     {
@@ -46,6 +47,7 @@ public class NotificationsController : ControllerBase
     }
 
     // POST: api/notifications/reset
+    [Authorize]
     [HttpPost("reset")]
     public async Task<IActionResult> ResetNotifications()
     {

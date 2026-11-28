@@ -101,7 +101,8 @@ export const dismissNotification = (id) => {
   // Enviar a la API .NET
   try {
     fetch(`${API_BASE}/notifications/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders()
     }).catch(() => {})
   } catch {
     // Ignorar si offline
@@ -131,7 +132,8 @@ export const resetNotifications = () => {
 
   try {
     fetch(`${API_BASE}/notifications/reset`, {
-      method: 'POST'
+      method: 'POST',
+      headers: getAuthHeaders()
     }).catch(() => {})
   } catch {
     // Ignorar si offline
