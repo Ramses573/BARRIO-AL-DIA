@@ -41,7 +41,7 @@ export default function Navbar() {
     <nav className="global-navbar">
       <div className="navbar-inner">
         <div className="navbar-top-row">
-          <Link to={isAuth ? "/" : "/login"} className="navbar-brand-link" onClick={() => setMobileMenuOpen(false)}>
+          <Link to={isAuth ? "/" : "/map"} className="navbar-brand-link" onClick={() => setMobileMenuOpen(false)}>
             <div className="navbar-logo-icon">
               <svg viewBox="0 0 36 36" width="28" height="28" fill="none">
                 <rect x="6" y="2" width="24" height="32" rx="4" fill="#0284c7" />
@@ -144,18 +144,40 @@ export default function Navbar() {
               />
             </>
           ) : (
-            <div className="navbar-public-actions">
-              <Link to="/report" className="btn-navbar-citizen-report">
-                <PlusCircle size={14} className="nav-icon" /> Reportar
-              </Link>
-              <Link to="/track" className="btn-navbar-citizen-track">
-                <Search size={14} className="nav-icon" /> Consultar Ticket
-              </Link>
+            <>
+              <ul className="navbar-nav-links">
+                <li>
+                  <Link to="/map" className={location.pathname === '/map' ? 'active' : ''}>
+                    <Map size={15} className="nav-icon" /> Mapa Real
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/report" className={location.pathname === '/report' ? 'active' : ''}>
+                    <PlusCircle size={15} className="nav-icon" /> Reportar
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/incidents" className={location.pathname.startsWith('/incidents') ? 'active' : ''}>
+                    <ClipboardList size={15} className="nav-icon" /> Incidentes
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/track" className={location.pathname.startsWith('/track') ? 'active' : ''}>
+                    <Search size={15} className="nav-icon" /> Consultar Ticket
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/noticias" className={location.pathname === '/noticias' ? 'active' : ''}>
+                    <Newspaper size={15} className="nav-icon" /> Noticias
+                  </Link>
+                </li>
+              </ul>
+
               <Link to="/login" className="navbar-locked-pill" title="Ingreso exclusivo para funcionarios municipales">
                 <Lock size={13} className="text-amber" />
                 <span>Portal Municipal</span>
               </Link>
-            </div>
+            </>
           )}
 
           {/* Theme Selector (theme-factory) */}

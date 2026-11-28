@@ -36,17 +36,17 @@ export default function App() {
         <OfflineSyncBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/map" element={<Map />} />
           <Route path="/report" element={<ReportIncident />} />
+          <Route path="/incidents" element={<Incidents />} />
+          <Route path="/incidents/:id" element={<IncidentDetail />} />
           <Route path="/track" element={<TrackIncident />} />
           <Route path="/track/:code" element={<TrackIncident />} />
           <Route path="/noticias" element={<NewsFeed />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/incidents" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
-          <Route path="/incidents/:id" element={<ProtectedRoute><IncidentDetail /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/map" replace />} />
         </Routes>
         <Footer />
         <CommunityChatWidget />
