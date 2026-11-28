@@ -78,6 +78,9 @@ for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 30;
     if not "%%u"=="" set WEB_HTTPS_URL=%%u
 )
 
+:: Sincronizar URL HTTPS en mobile\src\config.js para que el movil use HTTPS
+powershell -NoProfile -Command "$cfgPath = 'mobile\src\config.js'; if (Test-Path $cfgPath) { $c = Get-Content $cfgPath -Raw; $c = $c -replace 'export const PUBLIC_HTTPS_URL = ''.*?''', ('export const PUBLIC_HTTPS_URL = ''' + '%WEB_HTTPS_URL%' + ''''); Set-Content $cfgPath $c -NoNewline }" >nul 2>&1
+
 echo [6/6] Iniciando Metro Bundler para Aplicacion Movil (QR Expo Go)...
 echo.
 echo ========================================================

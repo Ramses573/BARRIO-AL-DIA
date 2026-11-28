@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Audio } from 'expo-av'
 import { colors, shadows } from '../theme/colors'
 import * as signalR from '@microsoft/signalr'
-import { DEV_PC_IP } from '../config'
+import { DEV_PC_IP, PUBLIC_HTTPS_URL } from '../config'
 import { getMessagesByTicket, sendChatMessage, uploadChatAudio, resolveAudioUrl } from '../services/chatService'
 import { getAllTrackableTickets } from '../services/incidentService'
 import { getCurrentUser } from '../services/authService'
@@ -82,9 +82,11 @@ export default function ChatScreen({ route }) {
     // 2. Conexión SignalR instantánea en la app móvil
     let connection = null
     try {
-      const hubUrl = Platform.OS === 'web'
-        ? 'http://localhost:5000/chatHub'
-        : `http://${DEV_PC_IP}:5000/chatHub`
+      const hubUrl = PUBLIC_HTTPS_URL
+        ? `${PUBLIC_HTTPS_URL}/chatHub`
+        : (Platform.OS === 'web'
+          ? 'http://localhost:5000/chatHub'
+          : `http://${DEV_PC_IP}:5000/chatHub`)
 
       connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl)

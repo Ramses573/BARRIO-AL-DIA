@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import * as signalR from '@microsoft/signalr'
 import { colors, shadows } from '../theme/colors'
 import { getNews } from '../services/newsService'
-import { getWebMapUrl, DEV_PC_IP } from '../config'
+import { getWebMapUrl, DEV_PC_IP, PUBLIC_HTTPS_URL } from '../config'
 
 const CANTONES = ['todos', 'Cartago', 'Turrialba', 'Tarrazú']
 
@@ -48,9 +48,11 @@ export default function NewsFeedScreen() {
 
     let connection = null
     try {
-      const hubUrl = Platform.OS === 'web'
-        ? 'http://localhost:5000/chatHub'
-        : `http://${DEV_PC_IP}:5000/chatHub`
+      const hubUrl = PUBLIC_HTTPS_URL
+        ? `${PUBLIC_HTTPS_URL}/chatHub`
+        : (Platform.OS === 'web'
+          ? 'http://localhost:5000/chatHub'
+          : `http://${DEV_PC_IP}:5000/chatHub`)
 
       connection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl)

@@ -3,23 +3,27 @@
  */
 import { Platform } from 'react-native'
 
-// Dirección IP local de la PC de desarrollo para que el celular físico o emulador
-// pueda comunicarse directamente con la aplicación web y el backend.
+// Dirección IP local de la PC de desarrollo
 export const DEV_PC_IP = '192.168.0.6'
 
+// URL HTTPS pública (actualizada automáticamente por iniciar_todo.bat)
+export const PUBLIC_HTTPS_URL = ''
+
 // URL de la aplicación Web (Vite)
-export const WEB_APP_URL = Platform.select({
+export const WEB_APP_URL = PUBLIC_HTTPS_URL || Platform.select({
   android: `http://${DEV_PC_IP}:3000`,
   ios: `http://${DEV_PC_IP}:3000`,
   default: 'http://localhost:3000'
 })
 
 // URL del backend .NET API
-export const API_BASE_URL = Platform.select({
-  android: `http://${DEV_PC_IP}:5000/api`,
-  ios: `http://${DEV_PC_IP}:5000/api`,
-  default: 'http://localhost:5000/api'
-})
+export const API_BASE_URL = PUBLIC_HTTPS_URL
+  ? `${PUBLIC_HTTPS_URL}/api`
+  : Platform.select({
+    android: `http://${DEV_PC_IP}:5000/api`,
+    ios: `http://${DEV_PC_IP}:5000/api`,
+    default: 'http://localhost:5000/api'
+  })
 
 /**
  * Genera la URL para abrir el mapa interactivo de la app web en tiempo real

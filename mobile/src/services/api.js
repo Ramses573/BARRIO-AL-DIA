@@ -1,11 +1,11 @@
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { DEV_PC_IP } from '../config'
+import { DEV_PC_IP, PUBLIC_HTTPS_URL } from '../config'
 
-// En Web es localhost:5000. En celular físico o emulador se conecta a la IP de la máquina anfitriona.
-const DEFAULT_HOST = Platform.OS === 'web'
+// En móvil usa el túnel HTTPS cuando está activo; en web local usa localhost:5000.
+const DEFAULT_HOST = PUBLIC_HTTPS_URL || (Platform.OS === 'web'
   ? 'http://localhost:5000'
-  : `http://${DEV_PC_IP}:5000`
+  : `http://${DEV_PC_IP}:5000`)
 const CUSTOM_HOST_KEY = '@barrio_api_host'
 
 let cachedBaseUrl = null
