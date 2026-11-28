@@ -74,28 +74,28 @@ for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 25;
     if not "%%u"=="" set WEB_HTTPS_URL=%%u
 )
 
-echo [6/6] Iniciando Metro Bundler para Aplicacion Movil...
-echo.
+echo [6/6] Iniciando Metro Bundler en segundo plano...
+start /b cmd /c "cd mobile && npx expo start --lan -c > ..\metro.log 2>&1"
+cls
 echo ========================================================
-echo   [SISTEMA EN LINEA Y CALENTADO AL 100%%]
+echo   BARRIO AL DIA - SISTEMA COMPLETO EN LINEA
+echo ========================================================
 echo   - Backend .NET 9 API: http://localhost:5000/swagger
 echo   - Frontend Web (PC):  http://localhost:3000
 echo   - Web en Celular GPS: %WEB_HTTPS_URL%
-echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
-echo   ------------------------------------------------------
-echo   1) QR WEB CON HTTPS REAL (Camara del celular -> GPS activo):
-echo ========================================================
-node -e "require('./mobile/node_modules/qrcode-terminal').generate('%WEB_HTTPS_URL%', {small: true})" 2>nul
-echo ========================================================
-echo   2) QR EXPO GO (Escanea el siguiente QR dentro de Expo Go):
-echo   Para detener todo el sistema: ejecuta detener_todo.bat
 echo ========================================================
 echo.
+echo   ESCANEA ESTE UNICO QR CON LA CAMARA DEL CELULAR:
+echo.
+node -e "require('./mobile/node_modules/qrcode-terminal').generate('%WEB_HTTPS_URL%', {small: true})" 2>nul
+echo.
+echo ========================================================
+echo   Para detener todo el sistema:
+echo   Presiona cualquier tecla aqui o ejecuta detener_todo.bat
+echo ========================================================
+pause >nul
 
-cd mobile
-call npx expo start --lan -c
-
-:: Limpieza automatica si Metro termina normalmente
+:: Limpieza automatica al salir
 echo.
 echo [INFO] Deteniendo servicios y liberando puertos...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
