@@ -25,7 +25,7 @@ if not exist "mobile\node_modules\" (
 
 echo [3/6] Liberando puertos 3000 (Web), 5000 (API) y 8081 (Metro)...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 
 :: Detectar IP de red local limpia
 set LAN_IP=192.168.0.4
@@ -60,24 +60,32 @@ powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { $res = Invok
 echo [5/6] Iniciando Frontend React Vite (Puerto 3000)...
 start /b cmd /c "npm run dev > frontend.log 2>&1"
 
-echo [INFO] Esperando inicio de interfaz web (HTTPS)...
-powershell -NoProfile -Command "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; for ($i=0; $i -lt 25; $i++) { try { $res = Invoke-WebRequest -Uri https://localhost:3000 -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; if ($res.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Milliseconds 300 }; exit 0" >nul 2>&1
+echo [INFO] Esperando inicio de interfaz web...
+powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { try { $res = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; if ($res.StatusCode -eq 200) { exit 0 } } catch {}; Start-Sleep -Milliseconds 300 }; exit 0" >nul 2>&1
 
 echo [INFO] Abriendo aplicacion Web en el navegador...
-start https://localhost:3000
+start http://localhost:3000
+
+echo [INFO] Generando tunel HTTPS confiable para GPS en celular...
+del /q tunnel.log >nul 2>&1
+start /b cmd /c "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 80:127.0.0.1:3000 nokey@localhost.run > tunnel.log 2>&1"
+set WEB_HTTPS_URL=http://%LAN_IP%:3000
+for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9.-]+\.lhr\.life') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
+    if not "%%u"=="" set WEB_HTTPS_URL=%%u
+)
 
 echo [6/6] Iniciando Metro Bundler para Aplicacion Movil...
 echo.
 echo ========================================================
 echo   [SISTEMA EN LINEA Y CALENTADO AL 100%%]
 echo   - Backend .NET 9 API: http://localhost:5000/swagger
-echo   - Frontend Web (PC):  https://localhost:3000
-echo   - Web en Celular GPS: https://%LAN_IP%:3000
+echo   - Frontend Web (PC):  http://localhost:3000
+echo   - Web en Celular GPS: %WEB_HTTPS_URL%
 echo   - IP Servidor Movil:  http://%LAN_IP%:5000/api
 echo   ------------------------------------------------------
-echo   1) QR WEB (Camara del celular -> abre https://%LAN_IP%:3000):
+echo   1) QR WEB CON HTTPS REAL (Camara del celular -> GPS activo):
 echo ========================================================
-node -e "require('./mobile/node_modules/qrcode-terminal').generate('https://%LAN_IP%:3000', {small: true})" 2>nul
+node -e "require('./mobile/node_modules/qrcode-terminal').generate('%WEB_HTTPS_URL%', {small: true})" 2>nul
 echo ========================================================
 echo   2) QR EXPO GO (Escanea el siguiente QR dentro de Expo Go):
 echo   Para detener todo el sistema: ejecuta detener_todo.bat
@@ -91,6 +99,6 @@ call npx expo start --lan -c
 echo.
 echo [INFO] Deteniendo servicios y liberando puertos...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5000, 8081 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { if ($_ -gt 0) { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }"
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*BarrioAlDia.Api*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*expo*' -or $_.CommandLine -like '*localhost.run*') -and $_.ProcessId -gt 0 } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
 echo [OK] Todos los servicios detenidos correctamente.
 exit /b

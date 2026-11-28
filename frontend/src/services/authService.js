@@ -5,7 +5,7 @@
 
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
-  : (typeof window !== 'undefined' && window.location?.protocol === 'https:' ? '/api' : 'http://localhost:5000/api')
+  : (typeof window !== 'undefined' && (window.location?.protocol === 'https:' || window.location?.port === '3000') ? '/api' : 'http://localhost:5000/api')
 
 const TOKEN_KEY = 'barrio_auth_token'
 const OFFICIAL_KEY = 'barrio_active_official'
@@ -123,7 +123,7 @@ export const getApiOrigin = () => {
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
   }
-  if (typeof window !== 'undefined' && window.location?.protocol === 'https:') {
+  if (typeof window !== 'undefined' && (window.location?.protocol === 'https:' || window.location?.port === '3000')) {
     return ''
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
