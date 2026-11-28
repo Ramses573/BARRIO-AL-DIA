@@ -227,6 +227,13 @@ export const getToken = () => {
   return null
 }
 
+export const getAuthHeaders = () => {
+  const token = getToken()
+  return token && token !== 'mock_jwt_token_for_testing'
+    ? { Authorization: `Bearer ${token}` }
+    : {}
+}
+
 export const isAuthenticated = () => {
   return !!getToken()
 }

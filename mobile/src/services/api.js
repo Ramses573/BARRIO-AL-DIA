@@ -89,9 +89,18 @@ export const apiGet = async (path, params = {}) => {
 export const apiPost = async (path, body = {}) => {
   try {
     const base = await getApiBase()
+    const headers = { 'Content-Type': 'application/json' }
+    try {
+      const token = await AsyncStorage.getItem('@barrio_auth_token')
+      if (token && !token.startsWith('vecino-token-') && !token.startsWith('official-token-')) {
+        headers.Authorization = `Bearer ${token}`
+      }
+    } catch {
+      // Ignorar si AsyncStorage no responde
+    }
     const res = await fetchWithTimeout(`${base}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body)
     })
     if (!res.ok) return null

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -159,6 +160,7 @@ public class NewsController : ControllerBase
     }
 
     // POST: api/news/wipe
+    [Authorize]
     [HttpPost("wipe")]
     public async Task<IActionResult> WipeAllNews()
     {
@@ -168,6 +170,7 @@ public class NewsController : ControllerBase
     }
 
     // DELETE: api/news/{id}
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteNews(int id)
     {

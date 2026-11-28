@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BarrioAlDia.Api.Data;
@@ -101,6 +102,7 @@ public class NotificationsController : ControllerBase
     }
 
     // POST: api/notifications/wipe
+    [Authorize]
     [HttpPost("wipe")]
     public async Task<IActionResult> WipeNotifications()
     {

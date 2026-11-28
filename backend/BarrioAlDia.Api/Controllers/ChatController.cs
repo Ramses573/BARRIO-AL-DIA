@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -133,6 +134,7 @@ public class ChatController : ControllerBase
     }
 
     // POST: api/chat/wipe
+    [Authorize]
     [HttpPost("wipe")]
     public async Task<IActionResult> WipeAllChatMessages()
     {

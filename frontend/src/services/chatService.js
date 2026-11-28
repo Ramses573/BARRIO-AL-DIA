@@ -3,6 +3,8 @@
  * Soporta texto y notas de voz grabadas en navegador o móvil
  */
 
+import { getAuthHeaders } from './authService'
+
 export const getApiBase = () => {
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL
@@ -81,7 +83,10 @@ export const wipeChats = async () => {
     })
   }
   try {
-    const res = await fetch(`${getApiBase()}/chat/wipe`, { method: 'POST' })
+    const res = await fetch(`${getApiBase()}/chat/wipe`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
     if (res.ok) return await res.json()
   } catch {
     // Fallback offline

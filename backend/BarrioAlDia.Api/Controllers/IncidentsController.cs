@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BarrioAlDia.Api.Data;
@@ -381,6 +382,7 @@ public class IncidentsController : ControllerBase
 
     // POST: api/incidents/wipe
     // Permite realizar un barrido completo de datos para pruebas limpias de flujo
+    [Authorize]
     [HttpPost("wipe")]
     public async Task<IActionResult> WipeIncidents()
     {

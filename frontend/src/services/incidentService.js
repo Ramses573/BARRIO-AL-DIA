@@ -3,6 +3,8 @@
  * con fallback inteligente a localStorage para resiliencia offline.
  */
 
+import { getAuthHeaders } from './authService'
+
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
   : (typeof window !== 'undefined' && (window.location?.protocol === 'https:' || window.location?.port === '3000') ? '/api' : 'http://localhost:5000/api')
@@ -285,7 +287,10 @@ export const wipeIncidents = async () => {
     }
   }
   try {
-    const res = await fetch(`${API_BASE}/incidents/wipe`, { method: 'POST' })
+    const res = await fetch(`${API_BASE}/incidents/wipe`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
     if (res.ok) {
       return await res.json()
     }

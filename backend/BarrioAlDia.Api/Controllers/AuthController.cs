@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,7 @@ namespace BarrioAlDia.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private static readonly PasswordHasher<Models.OfficialUser> _passwordHasher = new();
     private readonly BarrioDbContext _context;
     private readonly IConfiguration _config;
 
@@ -36,9 +38,15 @@ public class AuthController : ControllerBase
         var official = await _context.OfficialUsers
             .FirstOrDefaultAsync(u => u.Username.ToLower() == username || u.Email.ToLower() == username);
 
-        if (official == null || (official.PasswordHash != dto.Password && dto.Password != "Admin1234!"))
+        if (official == null || !VerifyPassword(official, dto.Password, out var needsRehash))
         {
             return Unauthorized(new { message = "Credenciales institucionales incorrectas." });
+        }
+
+        if (needsRehash)
+        {
+            official.PasswordHash = _passwordHasher.HashPassword(official, dto.Password);
+            await _context.SaveChangesAsync();
         }
 
         // Generar Token JWT
@@ -76,11 +84,15 @@ public class AuthController : ControllerBase
                 Entity = string.IsNullOrWhiteSpace(dto.Entity) ? "Comunidad Barrio al Día" : dto.Entity.Trim(),
                 Email = string.IsNullOrWhiteSpace(dto.Email) ? $"{username}@comunidad.cr" : dto.Email.Trim(),
                 BadgeNumber = string.IsNullOrWhiteSpace(dto.BadgeNumber) ? $"VEC-{DateTime.UtcNow.Ticks % 10000}" : dto.BadgeNumber.Trim(),
-                PasswordHash = string.IsNullOrWhiteSpace(dto.Password) ? "123" : dto.Password,
+                PasswordHash = string.Empty,
                 UserType = string.IsNullOrWhiteSpace(dto.UserType) ? "Citizen" : dto.UserType.Trim(),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
+            user.PasswordHash = _passwordHasher.HashPassword(
+                user,
+                string.IsNullOrWhiteSpace(dto.Password) ? Guid.NewGuid().ToString("N") : dto.Password
+            );
             _context.OfficialUsers.Add(user);
         }
 
@@ -89,7 +101,7 @@ public class AuthController : ControllerBase
         if (!string.IsNullOrWhiteSpace(dto.Entity)) user.Entity = dto.Entity.Trim();
         if (!string.IsNullOrWhiteSpace(dto.Email)) user.Email = dto.Email.Trim();
         if (!string.IsNullOrWhiteSpace(dto.BadgeNumber)) user.BadgeNumber = dto.BadgeNumber.Trim();
-        if (!string.IsNullOrWhiteSpace(dto.Password)) user.PasswordHash = dto.Password;
+        if (!string.IsNullOrWhiteSpace(dto.Password)) user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
         if (dto.AvatarUrl != null) user.AvatarUrl = dto.AvatarUrl.Trim();
         if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber.Trim();
         if (dto.Canton != null) user.Canton = dto.Canton.Trim();
@@ -182,10 +194,11 @@ public class AuthController : ControllerBase
             WorkSchedule = dto.WorkSchedule?.Trim() ?? string.Empty,
             EmergencyContact = dto.EmergencyContact?.Trim() ?? string.Empty,
             UserType = string.IsNullOrWhiteSpace(dto.UserType) ? "Official" : dto.UserType.Trim(),
-            PasswordHash = dto.Password,
+            PasswordHash = string.Empty,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
+        official.PasswordHash = _passwordHasher.HashPassword(official, dto.Password);
 
         _context.OfficialUsers.Add(official);
         await _context.SaveChangesAsync();
@@ -219,9 +232,34 @@ public class AuthController : ControllerBase
         UserType = u.UserType
     };
 
+    private static bool VerifyPassword(Models.OfficialUser official, string password, out bool needsRehash)
+    {
+        needsRehash = false;
+        if (string.IsNullOrEmpty(official.PasswordHash)) return false;
+
+        if (official.PasswordHash.StartsWith("AQAAAA", StringComparison.Ordinal))
+        {
+            var result = _passwordHasher.VerifyHashedPassword(official, official.PasswordHash, password);
+            if (result == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                needsRehash = true;
+                return true;
+            }
+            return result == PasswordVerificationResult.Success;
+        }
+
+        if (official.PasswordHash == password)
+        {
+            needsRehash = true;
+            return true;
+        }
+        return false;
+    }
+
     private string GenerateJwtToken(Models.OfficialUser official)
     {
-        var key = _config["Jwt:Key"] ?? "BarrioAlDia_SuperSecretKey_AcademicCUC_TI155_Emprendedores2026";
+        var key = _config["Jwt:Key"]
+            ?? throw new InvalidOperationException("Jwt:Key no configurado.");
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 

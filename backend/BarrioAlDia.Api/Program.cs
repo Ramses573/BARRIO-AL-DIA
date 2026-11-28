@@ -1,5 +1,8 @@
-using Microsoft.OpenApi.Models;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using BarrioAlDia.Api.Data;
 using BarrioAlDia.Api.Hubs;
 
@@ -17,17 +20,49 @@ builder.Services.AddDbContext<BarrioDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
-// Configuración de CORS para permitir frontend React Vite (localhost:3000 y red local)
+// Configuración de CORS restringida a los orígenes autorizados (Vercel, Tailscale Funnel y red local)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
+                  var host = uri.Host;
+                  return host.Equals("barrio-al-dia.vercel.app", StringComparison.OrdinalIgnoreCase)
+                      || host.Equals("madrenzo.tail8f3798.ts.net", StringComparison.OrdinalIgnoreCase)
+                      || host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                      || host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                      || host.StartsWith("192.168.", StringComparison.OrdinalIgnoreCase)
+                      || host.StartsWith("10.", StringComparison.OrdinalIgnoreCase);
+              })
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
+
+// Autenticación y validación JWT
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key no configurado en appsettings.json o variables de entorno.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "BarrioAlDiaApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "BarrioAlDiaClients";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+builder.Services.AddAuthorization();
 
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -69,6 +104,8 @@ var app = builder.Build();
 
 // Pipeline de Middleware
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
 var audiosPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "audios");
 if (!Directory.Exists(audiosPath))

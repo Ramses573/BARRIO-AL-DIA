@@ -3,6 +3,8 @@
  * Conectado con .NET 9 Web API y fallback offline (Anexo 4 CUC)
  */
 
+import { getAuthHeaders } from './authService'
+
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL
   : (typeof window !== 'undefined' && (window.location?.protocol === 'https:' || window.location?.port === '3000') ? '/api' : 'http://localhost:5000/api')
@@ -111,7 +113,10 @@ export const dismissNotification = (id) => {
 export const wipeNotifications = async () => {
   saveNotifications([])
   try {
-    const res = await fetch(`${API_BASE}/notifications/wipe`, { method: 'POST' })
+    const res = await fetch(`${API_BASE}/notifications/wipe`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    })
     if (res.ok) {
       return await res.json()
     }
