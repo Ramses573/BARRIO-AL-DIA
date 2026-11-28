@@ -1,7 +1,6 @@
 /**
  * Configuración centralizada de entorno para Barrio al Día Mobile
  */
-import { Platform } from 'react-native'
 
 // Dirección IP local de la PC de desarrollo
 export const DEV_PC_IP = '192.168.0.6'
@@ -9,12 +8,8 @@ export const DEV_PC_IP = '192.168.0.6'
 // URL HTTPS fija del Backend (.NET 9 + Tailscale Funnel)
 export const PUBLIC_HTTPS_URL = 'https://madrenzo.tail8f3798.ts.net'
 
-// URL de la aplicación Web (Vercel / Cloudflare Pages o Vite local)
-export const WEB_APP_URL = Platform.select({
-  android: `http://${DEV_PC_IP}:3000`,
-  ios: `http://${DEV_PC_IP}:3000`,
-  default: 'http://localhost:3000'
-})
+// URL fija en HTTPS de la aplicación Web (Vercel)
+export const WEB_APP_URL = 'https://barrio-al-dia.vercel.app'
 
 // URL del backend .NET API (HTTPS fijo)
 export const API_BASE_URL = `${PUBLIC_HTTPS_URL}/api`
