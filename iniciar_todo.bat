@@ -68,7 +68,7 @@ start http://localhost:3000
 
 echo [INFO] Generando tunel HTTPS confiable para GPS en celular...
 del /q tunnel.log >nul 2>&1
-start /b cmd /c "ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 80:127.0.0.1:3000 nokey@localhost.run > tunnel.log 2>&1"
+start /b cmd /c "ssh -T -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -R 80:127.0.0.1:3000 nokey@localhost.run > tunnel.log 2>&1"
 set WEB_HTTPS_URL=http://%LAN_IP%:3000
 for /f "tokens=*" %%u in ('powershell -NoProfile -Command "for ($i=0; $i -lt 25; $i++) { if (Test-Path 'tunnel.log') { $c = Get-Content 'tunnel.log' -Raw -ErrorAction SilentlyContinue; if ($c -match 'https://[a-zA-Z0-9.-]+\.lhr\.life') { Write-Output $matches[0]; exit 0 } }; Start-Sleep -Milliseconds 400 }"') do (
     if not "%%u"=="" set WEB_HTTPS_URL=%%u
